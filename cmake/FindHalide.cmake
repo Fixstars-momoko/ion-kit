@@ -13,12 +13,22 @@ endif()
 find_path(HALIDE_TOOLS_DIR NAMES tools PATHS ${HALIDE_ROOT})
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Halide
-  DEFAULT_MSG
-  HALIDE_INCLUDE_DIR
-  HALIDE_LIBRARY
-  HALIDE_TOOLS_DIR
-)
+if (UNIX)
+  find_package_handle_standard_args(Halide
+    DEFAULT_MSG
+    HALIDE_INCLUDE_DIR
+    HALIDE_LIBRARY
+    HALIDE_TOOLS_DIR
+  )
+else()
+  find_package_handle_standard_args(Halide
+    DEFAULT_MSG
+    HALIDE_INCLUDE_DIR
+    HALIDE_LIBRARY_DEBUG
+    HALIDE_LIBRARY_RELEASE
+    HALIDE_TOOLS_DIR
+  )
+endif()
 
 if(HALIDE_FOUND AND NOT TARGET Halide::Halide)
   add_library(Halide::Halide SHARED IMPORTED)
