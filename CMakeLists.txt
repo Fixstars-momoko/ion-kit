@@ -31,7 +31,7 @@ endif()
 #
 # Version
 #
-execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE GIT_REV ERROR_QUIET)
+execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE GIT_REV WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/VERSION CONTENT "${GIT_REV}")
 
 #
