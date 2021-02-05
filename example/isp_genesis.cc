@@ -8,9 +8,11 @@
 
 #include <ion/ion.h>
 
+#define DISABLE_SCHEDULE
 #include "ion-bb-core/bb.h"
 #include "ion-bb-image-io/bb.h"
 #include "ion-bb-image-processing/bb.h"
+#include "ion-bb-internal/bb.h"
 
 #include "ion-bb-core/rt.h"
 #include "ion-bb-image-io/rt.h"
@@ -125,16 +127,28 @@ int main(int argc, char *argv[]) {
                                  gain_g,
                                  gain_b,
                                  shading_correction["output"]);
+    Node white_balance_s = b.add("internal_schedule")
+                               .set_param(
+                                   Param{"output_name", "white_balance"},
+                                   Param{"output_replace", "true"},
+                                   Param{"compute_level", "compute_root"})(
+                                   white_balance["output"]);
     Node demosaic = b.add("image_processing_bayer_demosaic_filter")
                         .set_param(
                             Param{"bayer_pattern", "0"},  // RGGB
                             Param{"width", std::to_string(width)},
                             Param{"height", std::to_string(height)})(
-                            white_balance["output"]);
+                            white_balance_s["output"]);
+    Node demosaic_s = b.add("internal_schedule")
+                          .set_param(
+                              Param{"output_name", "demosaic"},
+                              Param{"output_replace", "true"},
+                              Param{"compute_level", "compute_root"})(
+                              demosaic["output"]);
     Node luminance = b.add("image_processing_calc_luminance")
                          .set_param(
                              Param{"luminance_method", "0"})(  // Average
-                             demosaic["output"]);
+                             demosaic_s["output"]);
     Node luminance_filter = b.add("core_constant_buffer_2d_float")
                                 .set_param(
                                     Param{"values", "0.04"},
@@ -148,6 +162,12 @@ int main(int argc, char *argv[]) {
                                       Param{"height", std::to_string(height)})(
                                       luminance_filter["output"],
                                       luminance["output"]);
+    Node filtered_luminance_s = b.add("internal_schedule")
+                                    .set_param(
+                                        Param{"output_name", "filtered_luminance"},
+                                        Param{"output_replace", "true"},
+                                        Param{"compute_level", "compute_root"})(
+                                        filtered_luminance["output"]);
     Node noise_reduction = b.add("image_processing_bilateral_filter_3d")
                                .set_param(
                                    Param{"color_difference_method", "1"},  // Average
@@ -156,8 +176,14 @@ int main(int argc, char *argv[]) {
                                    Param{"height", std::to_string(height)})(
                                    coef_color,
                                    coef_space,
-                                   filtered_luminance["output"],
-                                   demosaic["output"]);
+                                   filtered_luminance_s["output"],
+                                   demosaic_s["output"]);
+    Node noise_reduction_s = b.add("internal_schedule")
+                                 .set_param(
+                                     Param{"output_name", "noise_reduction"},
+                                     Param{"output_replace", "true"},
+                                     Param{"compute_level", "compute_root"})(
+                                     noise_reduction["output"]);
     Node color_matrix = b.add("core_constant_buffer_2d_float")
                             .set_param(
                                 Param{"values", "2.20213000 -1.27425000 0.07212000 -0.25650000 1.45961000 -0.20311000 0.07458000 -1.35791000 2.28333000"},
@@ -165,7 +191,13 @@ int main(int argc, char *argv[]) {
                                 Param{"extent1", "3"});
     Node color_conversion = b.add("image_processing_color_matrix")(
         color_matrix["output"],
-        noise_reduction["output"]);
+        noise_reduction_s["output"]);
+    Node color_conversion_s = b.add("internal_schedule")
+                                  .set_param(
+                                      Param{"output_name", "color_conversion"},
+                                      Param{"output_replace", "true"},
+                                      Param{"compute_level", "compute_root"})(
+                                      color_conversion["output"]);
     Node distortion_correction = b.add("image_processing_lens_distortion_correction_model_3d")
                                      .set_param(
                                          Param{"width", std::to_string(width)},
@@ -180,24 +212,42 @@ int main(int argc, char *argv[]) {
                                          cx,
                                          cy,
                                          output_scale,
-                                         color_conversion["output"]);
+                                         color_conversion_s["output"]);
+    Node distortion_correction_s = b.add("internal_schedule")
+                                       .set_param(
+                                           Param{"output_name", "distortion_correction"},
+                                           Param{"output_replace", "true"},
+                                           Param{"compute_level", "compute_root"})(
+                                           distortion_correction["output"]);
     Node resize = b.add("image_processing_resize_area_average_3d")
                       .set_param(
                           Param{"width", std::to_string(width)},
                           Param{"height", std::to_string(height)},
                           Param{"scale", std::to_string(scale)})(
-                          distortion_correction["output"]);
+                          distortion_correction_s["output"]);
+    Node resize_s = b.add("internal_schedule")
+                        .set_param(
+                            Param{"output_name", "resize"},
+                            Param{"output_replace", "true"},
+                            Param{"compute_level", "compute_root"})(
+                            resize["output"]);
     Node gamma_correction = b.add("image_processing_gamma_correction_3d")(
         gamma,
-        resize["output"]);
+        resize_s["output"]);
     Node denormalize = b.add("core_denormalize_3d_uint8")(
         gamma_correction["output"]);
+    Node denormalize_s = b.add("internal_schedule")
+                             .set_param(
+                                 Param{"output_name", "denormalize"},
+                                 Param{"output_replace", "true"},
+                                 Param{"compute_level", "compute_root"})(
+                                 denormalize["output"]);
     Node output = b.add("image_io_image_saver")
                       .set_param(
                           Param{"path", "output.png"},
                           Param{"width", std::to_string(output_width)},
                           Param{"height", std::to_string(output_height)})(
-                          denormalize["output"]);
+                          denormalize_s["output"]);
 
     Halide::Buffer<int32_t> obuf(std::vector<int>{});
     pm.set(output["output"], obuf);
