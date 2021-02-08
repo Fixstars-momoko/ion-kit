@@ -34,6 +34,11 @@ public:
                     Var block, thread;
                     f.split(i, block, thread, 64);
                     f.gpu_blocks(block).gpu_threads(thread);
+                } else if (f.args().size() == 3) {
+                    Var x = f.args()[0];
+                    Var y = f.args()[1];
+                    Var xo, yo, xi, yi;
+                    f.gpu_tile(x, y, xo, yo, xi, yi, 16, 16);
                 } else {
                     Var x = f.args()[f.args().size()-2];
                     Var y = f.args()[f.args().size()-1];
@@ -43,6 +48,13 @@ public:
             } else {
                 if (f.args().size() == 0) {
                     // NOP
+                } else if (f.args().size() == 2) {
+                    f.parallel(f.args()[1]);
+                    f.vectorize(f.args()[0], natural_vector_size(f.output_types()[0]));
+                } else if (f.args().size() == 3) {
+                    f.parallel(f.args()[1]);
+                    f.vectorize(f.args()[0], natural_vector_size(f.output_types()[0]));
+                    f.reorder(f.args()[2], f.args()[0], f.args()[1]);
                 } else {
                     f.parallel(f.args()[f.args().size()-1]);
                 }
