@@ -2,6 +2,11 @@ project(ion-kit LANGUAGES C CXX)
 
 cmake_minimum_required(VERSION 3.6)
 
+if(EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    conan_basic_setup()
+endif()
+
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # This is required to export symbols on windows platform
@@ -12,21 +17,22 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 # Options
 #
 set(HALIDE_ROOT "" CACHE PATH "Path to Halide")
-option(ION_BUILD_ALL_BB "Enable to build all building blocks" ON)
-set(ION_BBS_TO_BUILD "" CACHE STRING "A List of building blocks to build (This overrides ION_BUILD_ALL_BB)")
+# option(ION_BUILD_ALL_BB "Enable to build all building blocks" ON)
+# set(ION_BBS_TO_BUILD "" CACHE STRING "A List of building blocks to build (This overrides ION_BUILD_ALL_BB)")
 option(ION_BUILD_DOC "Build documents." OFF)
 option(ION_BUILD_TEST "Enable to build tests" ON)
-option(ION_BUILD_EXAMPLE "Enable to build examples" ON)
+# option(ION_BUILD_EXAMPLE "Enable to build examples" ON)
 option(ION_BUNDLE_HALIDE "Enable to bundle halide binary into package" OFF)
-option(WITH_CUDA "Enable CUDA with buliding examples." ON)
+# option(WITH_CUDA "Enable CUDA with buliding examples." ON)
+option(ENABLE_PACKAGE "Enable to build deb package" OFF)
 
 #
 # Dependent libraries
 #
 find_package(Halide REQUIRED)
-if (WITH_CUDA)
-    find_package(CUDA REQUIRED)
-endif()
+# if (WITH_CUDA)
+#     find_package(CUDA REQUIRED)
+# endif()
 
 #
 # Version
@@ -54,13 +60,13 @@ endif()
 #
 # ion-bb
 #
-include(ImportIonBB)
-ion_import_building_block()
+# include(ImportIonBB)
+# ion_import_building_block()
 
 #
 # Link directories
 #
-link_directories(${ION_BB_LINK_DIRS})
+# link_directories(${ION_BB_LINK_DIRS})
 
 #
 # Test
@@ -73,10 +79,10 @@ endif()
 #
 # Examples
 #
-if(ION_BUILD_EXAMPLE)
-    enable_testing()
-    add_subdirectory(example)
-endif()
+# if(ION_BUILD_EXAMPLE)
+#     enable_testing()
+#     add_subdirectory(example)
+# endif()
 
 #
 # Documentation
@@ -111,6 +117,7 @@ endif()
 #
 # Install
 #
+# TODO: update
 install(FILES cmake/ion-bb-config.cmake DESTINATION share/cmake/)
 
 if (UNIX)
@@ -146,7 +153,7 @@ endif()
 #
 # Packaging
 #
-if (UNIX)
+if (ENABLE_PACKAGE)
     set(CPACK_GENERATOR "DEB")
     set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
     set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Fixstars Solutions Inc.")

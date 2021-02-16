@@ -4,12 +4,11 @@
 
 #include "ion/c_ion.h"
 
-int main()
-{
+int main() {
     int ret = 0;
 
     {
-        ion_type_t t = {.code=ion_type_int, .bits=32, .lanes=1};
+        ion_type_t t = {.code = ion_type_int, .bits = 32, .lanes = 1};
 
         ion_port_t min0, extent0, min1, extent1, v;
         ret = ion_port_create(&min0, "min0", t, 0);
@@ -64,7 +63,7 @@ int main()
         if (ret != 0)
             return ret;
 
-        ion_port_t *ports = (ion_port_t*)malloc(6*sizeof(ion_port_t));
+        ion_port_t *ports = (ion_port_t *)malloc(6 * sizeof(ion_port_t));
 
         ret = ion_node_get_port(n0, "output", &ports[0]);
         if (ret != 0)
@@ -133,7 +132,7 @@ int main()
         if (ret != 0)
             return ret;
 
-        ret = ion_builder_with_bb_module(b, "./libion-bb-test.so");
+        ret = ion_builder_with_bb_module(b, "libion-bb-test.so");
         if (ret != 0)
             return ret;
 
@@ -150,7 +149,7 @@ int main()
     }
 
     {
-        ion_type_t t = {.code=ion_type_int, .bits=32, .lanes=1};
+        ion_type_t t = {.code = ion_type_int, .bits = 32, .lanes = 1};
         ion_buffer_t b;
         int sizes[3] = {3, 2, 4};
         ret = ion_buffer_create(&b, t, sizes, 3);
@@ -158,26 +157,25 @@ int main()
             return ret;
         }
 
-        int buf1[3*2*4] = {
-             0,  1,  2,  3,  4,  5,
-             6,  7,  8,  9, 10, 11,
+        int buf1[3 * 2 * 4] = {
+            0, 1, 2, 3, 4, 5,
+            6, 7, 8, 9, 10, 11,
             12, 13, 14, 15, 16, 17,
-            18, 19, 20, 21, 22, 23
-        };
+            18, 19, 20, 21, 22, 23};
 
         ret = ion_buffer_write(b, buf1, 3 * 2 * 4 * sizeof(int));
         if (ret != 0) {
             return ret;
         }
 
-        int buf2 [3 * 2 * 4] = {0};
+        int buf2[3 * 2 * 4] = {0};
 
         ret = ion_buffer_read(b, buf2, 3 * 2 * 4 * sizeof(int));
         if (ret != 0) {
             return ret;
         }
 
-        for (int i=0; i<3*2*4; ++i) {
+        for (int i = 0; i < 3 * 2 * 4; ++i) {
             if (buf1[i] != buf2[i]) {
                 return -1;
             }
@@ -189,7 +187,7 @@ int main()
     }
 
     {
-        ion_type_t t = {.code=ion_type_int, .bits=32, .lanes=1};
+        ion_type_t t = {.code = ion_type_int, .bits = 32, .lanes = 1};
 
         ion_port_t ip;
         ret = ion_port_create(&ip, "input", t, 2);
@@ -210,7 +208,7 @@ int main()
         if (ret != 0)
             return ret;
 
-        ret = ion_builder_with_bb_module(b, "./libion-bb-test.so");
+        ret = ion_builder_with_bb_module(b, "libion-bb-test.so");
         if (ret != 0)
             return ret;
 
@@ -238,11 +236,11 @@ int main()
         if (ret != 0)
             return ret;
 
-        int in[16*16];
-        for (int i=0; i<16*16; ++i) {
+        int in[16 * 16];
+        for (int i = 0; i < 16 * 16; ++i) {
             in[i] = 1;
         }
-        ret = ion_buffer_write(ibuf, in, 16*16*sizeof(int));
+        ret = ion_buffer_write(ibuf, in, 16 * 16 * sizeof(int));
         if (ret != 0)
             return ret;
 
@@ -268,9 +266,9 @@ int main()
         if (ret != 0)
             return ret;
 
-        int out[16*16] = {0};
-        ret = ion_buffer_read(obuf, out, 16*16*sizeof(int));
-        for (int i=0;i<16*16; ++i) {
+        int out[16 * 16] = {0};
+        ret = ion_buffer_read(obuf, out, 16 * 16 * sizeof(int));
+        for (int i = 0; i < 16 * 16; ++i) {
             if (out[i] != 42) {
                 printf("%d\n", out[i]);
                 return -1;

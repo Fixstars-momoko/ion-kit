@@ -1,18 +1,17 @@
 #include <fstream>
 
 #include "ion/builder.h"
-#include "ion/json.hpp"
 #include "ion/util.h"
+#include <nlohmann/json.hpp>
 
 #include "dynamic_module.h"
 #include "metadata.h"
-#include "sole.hpp"
 
 namespace ion {
 
 namespace {
 
-bool is_ready(const std::vector<Node>& sorted, const Node& n) {
+bool is_ready(const std::vector<Node> &sorted, const Node &n) {
     bool ready = true;
     for (auto p : n.ports()) {
         // This port has external dependency. Always ready to add.
@@ -22,7 +21,7 @@ bool is_ready(const std::vector<Node>& sorted, const Node& n) {
 
         // Check port dependent node is already added
         ready &= std::find_if(sorted.begin(), sorted.end(),
-                              [&p](const Node& n) {
+                              [&p](const Node &n) {
                                   return n.id() == p.node_id();
                               }) != sorted.end();
     }
@@ -52,33 +51,30 @@ std::vector<Node> topological_sort(std::vector<Node> nodes) {
     return sorted;
 }
 
-} // anonymous
+}  // namespace
 
 using json = nlohmann::json;
 
-Builder::Builder()
-{
+Builder::Builder() {
 }
 
-Node Builder::add(const std::string& k)
-{
-    Node n(sole::uuid4().str(), k, target_);
+Node Builder::add(const std::string &k) {
+    Node n(make_uuid(), k, target_);
     nodes_.push_back(n);
     return n;
 }
 
-Builder Builder::set_target(const Halide::Target& target) {
+Builder Builder::set_target(const Halide::Target &target) {
     target_ = target;
     return *this;
 }
 
-Builder Builder::with_bb_module(const std::string& module_path) {
+Builder Builder::with_bb_module(const std::string &module_path) {
     bb_modules_[module_path] = std::make_shared<DynamicModule>(module_path);
     return *this;
 }
 
-
-void Builder::save(const std::string& file_name) {
+void Builder::save(const std::string &file_name) {
     std::ofstream ofs(file_name);
     json j;
     j["target"] = target_.to_string();
@@ -87,7 +83,7 @@ void Builder::save(const std::string& file_name) {
     return;
 }
 
-void Builder::load(const std::string& file_name) {
+void Builder::load(const std::string &file_name) {
     std::ifstream ifs(file_name);
     json j;
     ifs >> j;
@@ -96,7 +92,7 @@ void Builder::load(const std::string& file_name) {
     return;
 }
 
-void Builder::compile(const std::string& function_name, const CompileOption& option) {
+void Builder::compile(const std::string &function_name, const CompileOption &option) {
     using namespace Halide;
 
     // Build pipeline and module first
@@ -126,18 +122,18 @@ void Builder::compile(const std::string& function_name, const CompileOption& opt
 //     return build(pm).realize(sizes, target_, pm.get_param_map());
 // }
 
-void Builder::run(const ion::PortMap& pm) {
+void Builder::run(const ion::PortMap &pm) {
     auto p = build(pm, &outputs_);
     return p.realize(Halide::Realization(outputs_), target_, pm.get_param_map());
 }
 
-bool is_dereferenced(const std::vector<Node>& nodes, const std::string node_id, const std::string& func_name) {
-    for (const auto& node : nodes) {
+bool is_dereferenced(const std::vector<Node> &nodes, const std::string node_id, const std::string &func_name) {
+    for (const auto &node : nodes) {
         if (node.id() != node_id) {
             continue;
         }
 
-        for (const auto& port : node.ports()) {
+        for (const auto &port : node.ports()) {
             if (port.key() == func_name) {
                 return true;
             }
@@ -149,13 +145,13 @@ bool is_dereferenced(const std::vector<Node>& nodes, const std::string node_id, 
     throw std::runtime_error("Unreachable");
 }
 
-std::vector<std::tuple<std::string, Halide::Func>> collect_unbound_outputs(const std::vector<Node>& nodes,
-                                                                           const std::unordered_map<std::string, std::shared_ptr<Internal::BuildingBlockBase>>& bbs) {
+std::vector<std::tuple<std::string, Halide::Func>> collect_unbound_outputs(const std::vector<Node> &nodes,
+                                                                           const std::unordered_map<std::string, std::shared_ptr<Internal::BuildingBlockBase>> &bbs) {
     std::vector<std::tuple<std::string, Halide::Func>> unbounds;
-    for (const auto& kv : bbs) {
+    for (const auto &kv : bbs) {
         auto node_id = kv.first;
         auto bb = kv.second;
-        for (const auto& output : bb->param_info().outputs()) {
+        for (const auto &output : bb->param_info().outputs()) {
             if (output->is_array()) {
                 throw std::runtime_error("Unreachable");
                 // for (const auto &f : bb->get_array_output(p.key())) {
@@ -173,7 +169,7 @@ std::vector<std::tuple<std::string, Halide::Func>> collect_unbound_outputs(const
     return unbounds;
 }
 
-Halide::Pipeline Builder::build(const ion::PortMap& pm, std::vector<Halide::Buffer<>> *outputs) {
+Halide::Pipeline Builder::build(const ion::PortMap &pm, std::vector<Halide::Buffer<>> *outputs) {
 
     if (pipeline_.defined()) {
         return pipeline_;
@@ -195,7 +191,7 @@ Halide::Pipeline Builder::build(const ion::PortMap& pm, std::vector<Halide::Buff
 
         std::shared_ptr<Internal::BuildingBlockBase> bb(Internal::GeneratorRegistry::create(n.name(), GeneratorContext(n.target())));
         Internal::GeneratorParamsMap gpm;
-        for (const auto& p : n.params()) {
+        for (const auto &p : n.params()) {
             gpm[p.key()] = p.val();
         }
         bb->set_generator_param_values(gpm);
@@ -203,11 +199,11 @@ Halide::Pipeline Builder::build(const ion::PortMap& pm, std::vector<Halide::Buff
     }
 
     // Assigning ports
-    for (size_t i=0; i<nodes_.size(); ++i) {
+    for (size_t i = 0; i < nodes_.size(); ++i) {
         auto n = nodes_[i];
         auto bb = bbs[n.id()];
         std::vector<std::vector<Internal::StubInput>> args;
-        for (size_t j=0; j<n.ports().size(); ++j) {
+        for (size_t j = 0; j < n.ports().size(); ++j) {
             auto p = n.ports()[j];
             // Unbounded parameter
             auto *in = bb->param_info().inputs().at(j);
@@ -253,9 +249,9 @@ Halide::Pipeline Builder::build(const ion::PortMap& pm, std::vector<Halide::Buff
 
     // Traverse bbs and bundling all outputs
     std::unordered_map<std::string, std::vector<std::string>> dereferenced;
-    for (size_t i=0; i<nodes_.size(); ++i) {
+    for (size_t i = 0; i < nodes_.size(); ++i) {
         auto n = nodes_[i];
-        for (size_t j=0; j<n.ports().size(); ++j) {
+        for (size_t j = 0; j < n.ports().size(); ++j) {
             auto p = n.ports()[j];
 
             if (!p.node_id().empty() && bbs[n.id()]->param_info().inputs().at(j)->is_array()) {
@@ -274,45 +270,45 @@ Halide::Pipeline Builder::build(const ion::PortMap& pm, std::vector<Halide::Buff
     if (outputs) {
         // This is explicit mode. Make output list based on specified port map.
         for (auto kv : pm.get_output_buffer()) {
-           auto node_id = std::get<0>(kv.first);
-           auto port_key = std::get<1>(kv.first);
+            auto node_id = std::get<0>(kv.first);
+            auto port_key = std::get<1>(kv.first);
 
-           bool found = false;
-           for (auto info : bbs[node_id]->param_info().outputs()) {
-               if (info->name() == port_key) {
-                   if (info->is_array()) {
-                       auto fs = bbs[node_id]->get_array_output(port_key);
-                       if (fs.size() != kv.second.size()) {
-                           throw std::runtime_error("Invalid size of array : " + node_id + ", " + port_key);
-                       }
-                       for (size_t i=0; i<fs.size(); ++i) {
-                           output_funcs.push_back(fs[i]);
-                           outputs->push_back(kv.second[i]);
-                       }
-                   } else {
-                       auto f = bbs[node_id]->get_output(port_key);
-                       if (1 != kv.second.size()) {
-                           throw std::runtime_error("Invalid size of array : " + node_id + ", " + port_key);
-                       }
-                       output_funcs.push_back(f);
-                       outputs->push_back(kv.second.front());
-                   }
-                   found = true;
-               }
-           }
-           if (!found) {
-               throw std::runtime_error("Invalid output port: " + node_id + ", " + port_key);
-           }
+            bool found = false;
+            for (auto info : bbs[node_id]->param_info().outputs()) {
+                if (info->name() == port_key) {
+                    if (info->is_array()) {
+                        auto fs = bbs[node_id]->get_array_output(port_key);
+                        if (fs.size() != kv.second.size()) {
+                            throw std::runtime_error("Invalid size of array : " + node_id + ", " + port_key);
+                        }
+                        for (size_t i = 0; i < fs.size(); ++i) {
+                            output_funcs.push_back(fs[i]);
+                            outputs->push_back(kv.second[i]);
+                        }
+                    } else {
+                        auto f = bbs[node_id]->get_output(port_key);
+                        if (1 != kv.second.size()) {
+                            throw std::runtime_error("Invalid size of array : " + node_id + ", " + port_key);
+                        }
+                        output_funcs.push_back(f);
+                        outputs->push_back(kv.second.front());
+                    }
+                    found = true;
+                }
+            }
+            if (!found) {
+                throw std::runtime_error("Invalid output port: " + node_id + ", " + port_key);
+            }
         }
     } else {
         // This is implicit mode. Make output list based on unbound output in the graph.
-        for (int i=0; i<nodes_.size(); ++i) {
+        for (int i = 0; i < nodes_.size(); ++i) {
             auto node_id = nodes_[i].id();
             auto p = bbs[node_id]->get_pipeline();
             for (auto f : p.outputs()) {
 
                 // It is not dereferenced, then treat as outputs
-                const auto& dv = dereferenced[node_id];
+                const auto &dv = dereferenced[node_id];
                 std::string key = f.name();
                 key = key.substr(0, key.find('$'));
                 auto it = std::find(dv.begin(), dv.end(), key);
@@ -339,9 +335,8 @@ std::string Builder::bb_metadata(void) {
     return j.dump();
 }
 
-
-const std::vector<Node>& Builder::get_nodes() const {
+const std::vector<Node> &Builder::get_nodes() const {
     return nodes_;
 }
 
-} //namespace ion
+}  //namespace ion

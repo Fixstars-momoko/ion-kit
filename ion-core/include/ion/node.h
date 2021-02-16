@@ -7,9 +7,9 @@
 
 #include <Halide.h>
 
-#include "json.hpp"
 #include "param.h"
 #include "port.h"
+#include <nlohmann/json.hpp>
 
 namespace ion {
 
@@ -26,9 +26,11 @@ class Node {
         std::vector<Param> params;
         std::vector<Port> ports;
 
-        Node_(): id(), name(), target(), params(), ports() {}
+        Node_()
+            : id(), name(), target(), params(), ports() {
+        }
 
-        Node_(const std::string& id_, const std::string& name_, const Halide::Target& target_)
+        Node_(const std::string &id_, const std::string &name_, const Halide::Target &target_)
             : id(id_), name(name_), target(target_), params(), ports() {
         }
     };
@@ -36,10 +38,11 @@ class Node {
 public:
     friend class Builder;
 
-    friend void to_json(json&, const Node&);
-    friend void from_json(const json&, Node&);
+    friend void to_json(json &, const Node &);
+    friend void from_json(const json &, Node &);
 
-    Node() : impl_(new Node_) {};
+    Node()
+        : impl_(new Node_){};
 
     /**
      * Set the target of the node.
@@ -48,7 +51,7 @@ public:
      * This target object can be retrieved by calling BuildingBlock::get_target from BuildingBlock::generate and BuildingBlock::schedule.
      * @return Node object whose target is set.
      */
-    Node set_target(const Halide::Target& target) {
+    Node set_target(const Halide::Target &target) {
         impl_->target = target;
         return *this;
     }
@@ -60,12 +63,12 @@ public:
      * @return Node object whose parameter is set.
      */
     template<typename... Args>
-    Node set_param(Args ...args) {
+    Node set_param(Args... args) {
         impl_->params = std::vector<Param>{args...};
         return *this;
     }
 
-    void set_param(const std::vector<Param>& params) {
+    void set_param(const std::vector<Param> &params) {
         impl_->params = params;
     }
 
@@ -79,12 +82,12 @@ public:
      * @return Node object whose port is set.
      */
     template<typename... Args>
-    Node operator()(Args ...args) {
+    Node operator()(Args... args) {
         impl_->ports = std::vector<Port>{args...};
         return *this;
     }
 
-    void operator()(const std::vector<Port>& ports) {
+    void operator()(const std::vector<Port> &ports) {
         impl_->ports = ports;
     }
 
@@ -93,7 +96,7 @@ public:
      * @arg key: The key of port name which is matched with first argument of Output declared in user-defined class deriving BuildingBlock.
      * @return Port object which is specified by key.
      */
-    Port operator[](const std::string& key) {
+    Port operator[](const std::string &key) {
         return Port(key, impl_->id);
     }
 
@@ -118,14 +121,13 @@ public:
     }
 
 private:
-    Node(const std::string& id, const std::string& name, const Halide::Target& target)
-        : impl_(new Node_{id, name, target})
-    {
+    Node(const std::string &id, const std::string &name, const Halide::Target &target)
+        : impl_(new Node_{id, name, target}) {
     }
 
     std::shared_ptr<Node_> impl_;
 };
 
-} // namespace ion
+}  // namespace ion
 
-#endif // ION_NODE_H
+#endif  // ION_NODE_H
