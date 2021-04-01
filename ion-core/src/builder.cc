@@ -1,6 +1,11 @@
 #include <fstream>
 
+#ifdef __linux__
+#include <unistd.h>
+#endif
+
 #include "ion/builder.h"
+#include "ion/generator.h"
 #include "ion/util.h"
 #include <nlohmann/json.hpp>
 
@@ -11,7 +16,19 @@ namespace ion {
 
 namespace {
 
-bool is_ready(const std::vector<Node> &sorted, const Node &n) {
+std::map<Halide::Output, std::string> compute_output_files(const Halide::Target &target,
+                                                           const std::string &base_path,
+                                                           const std::set<Halide::Output> &outputs) {
+    std::map<Halide::Output, const Halide::Internal::OutputInfo> output_info = Halide::Internal::get_output_info(target);
+
+    std::map<Halide::Output, std::string> output_files;
+    for (auto o : outputs) {
+        output_files[o] = base_path + output_info.at(o).extension;
+    }
+    return output_files;
+}
+
+bool is_ready(const std::vector<Node>& sorted, const Node& n) {
     bool ready = true;
     for (auto p : n.ports()) {
         // This port has external dependency. Always ready to add.
@@ -100,27 +117,47 @@ void Builder::compile(const std::string &function_name, const CompileOption &opt
     Module m = p.compile_to_module(p.infer_arguments(), function_name, target_);
 
     // Tailor prefix
-    auto output_prefix = option.output_directory.empty() ? "." : option.output_directory;
+    auto output_prefix = option.output_directory.empty() ? "." : option.output_directory + "/";
     output_prefix += "/" + function_name;
 
-    // Generate header
-    Outputs output_files = Outputs().c_header(output_prefix + ".h");
+    std::set<Output> outputs;
 
-    // Generate library
-    if (target_.os == Target::Windows && !target_.has_feature(Target::MinGW)) {
-        output_files = output_files.static_library(output_prefix + ".lib");
+#ifdef HALIDE_FOR_FPGA
+    if (target_.has_fpga_feature()) {
+        outputs.insert(Output::hls_package);
     } else {
-        output_files = output_files.static_library(output_prefix + ".a");
+#endif
+        outputs.insert(Output::c_header);
+        outputs.insert(Output::static_library);
+#ifdef HALIDE_FOR_FPGA
     }
+#endif
 
+    const auto output_files = compute_output_files(target_, output_prefix, outputs);
     m.compile(output_files);
+
+#ifdef HALIDE_FOR_FPGA
+#ifdef __linux__
+    if (target_.has_fpga_feature()) {
+        std::string hls_dir = output_files.at(Output::hls_package);
+        chdir(hls_dir.c_str());
+        int ret = std::getenv("ION_CSIM") ? system("make -f Makefile.csim.static") : system("make -f Makefile.ultra96v2");
+        std::string lib_name = std::getenv("ION_CSIM") ? function_name + "_sim.a" : function_name + ".a";
+        internal_assert(ret == 0) << "Building hls package is failed.\n";
+        std::string cmd = "cp " + lib_name + " ../" + function_name + ".a && cp " + function_name + ".h ../";
+        ret = system(cmd.c_str());
+        internal_assert(ret == 0) << "Building hls package is failed.\n";
+        chdir("..");
+    }
+#endif
+#endif
+
     return;
 }
 
-// NOTE: This function is deprecated
-// Halide::Realization Builder::run(const std::vector<int32_t>& sizes, const ion::PortMap& pm) {
-//     return build(pm).realize(sizes, target_, pm.get_param_map());
-// }
+Halide::Realization Builder::run(const std::vector<int32_t>& sizes, const ion::PortMap& pm) {
+    return build(pm).realize(sizes, target_, pm.get_param_map());
+}
 
 void Builder::run(const ion::PortMap &pm) {
     auto p = build(pm, &outputs_);
@@ -237,32 +274,36 @@ Halide::Pipeline Builder::build(const ion::PortMap &pm, std::vector<Halide::Buff
             } else {
                 if (in->is_array()) {
                     auto f_array = bbs[p.node_id()]->get_array_output(p.key());
-                    args.push_back(bb->build_input(j, f_array));
+                    if (in->kind() == Internal::IOKind::Scalar) {
+                        std::vector<Halide::Expr> exprs;
+                        for (auto &f : f_array) {
+                            if (f.dimensions() != 0) {
+                                throw std::runtime_error("Invalid port connection : " + in->name());
+                            }
+                            exprs.push_back(f());
+                        }
+                        args.push_back(bb->build_input(j, exprs));
+                    } else if (in->kind() == Internal::IOKind::Function) {
+                        args.push_back(bb->build_input(j, f_array));
+                    } else {
+                        throw std::runtime_error("fixme");
+                    }
                 } else {
                     Halide::Func f = bbs[p.node_id()]->get_output(p.key());
-                    args.push_back(bb->build_input(j, f));
+                    if (in->kind() == Internal::IOKind::Scalar) {
+                        if (f.dimensions() != 0) {
+                            throw std::runtime_error("Invalid port connection : " + in->name());
+                        }
+                        args.push_back(bb->build_input(j, f()));
+                    } else if (in->kind() == Internal::IOKind::Function) {
+                        args.push_back(bb->build_input(j, f));
+                    } else {
+                        throw std::runtime_error("fixme");
+                    }
                 }
             }
         }
         bb->apply(args);
-    }
-
-    // Traverse bbs and bundling all outputs
-    std::unordered_map<std::string, std::vector<std::string>> dereferenced;
-    for (size_t i = 0; i < nodes_.size(); ++i) {
-        auto n = nodes_[i];
-        for (size_t j = 0; j < n.ports().size(); ++j) {
-            auto p = n.ports()[j];
-
-            if (!p.node_id().empty() && bbs[n.id()]->param_info().inputs().at(j)->is_array()) {
-                for (const auto &f : bbs[p.node_id()]->get_array_output(p.key())) {
-                    const auto key = f.name();
-                    dereferenced[p.node_id()].emplace_back(key.substr(0, key.find('$')));
-                }
-            } else {
-                dereferenced[p.node_id()].push_back(p.key());
-            }
-        }
     }
 
     std::vector<Halide::Func> output_funcs;
@@ -302,16 +343,29 @@ Halide::Pipeline Builder::build(const ion::PortMap &pm, std::vector<Halide::Buff
         }
     } else {
         // This is implicit mode. Make output list based on unbound output in the graph.
-        for (int i = 0; i < nodes_.size(); ++i) {
+
+        // Traverse bbs and bundling all outputs
+        std::unordered_map<std::string, std::vector<std::string>> dereferenced;
+        for (size_t i = 0; i < nodes_.size(); ++i) {
+            auto n = nodes_[i];
+            for (size_t j = 0; j < n.ports().size(); ++j) {
+                auto p = n.ports()[j];
+
+                if (!p.node_id().empty()) {
+                    for (const auto &f : bbs[p.node_id()]->get_array_output(p.key())) {
+                        dereferenced[p.node_id()].emplace_back(f.name());
+                    }
+                }
+            }
+        }
+        for (int i=0; i<nodes_.size(); ++i) {
             auto node_id = nodes_[i].id();
             auto p = bbs[node_id]->get_pipeline();
             for (auto f : p.outputs()) {
 
                 // It is not dereferenced, then treat as outputs
-                const auto &dv = dereferenced[node_id];
-                std::string key = f.name();
-                key = key.substr(0, key.find('$'));
-                auto it = std::find(dv.begin(), dv.end(), key);
+                const auto& dv = dereferenced[node_id];
+                auto it = std::find(dv.begin(), dv.end(), f.name());
                 if (it == dv.end()) {
                     output_funcs.push_back(f);
                 }
