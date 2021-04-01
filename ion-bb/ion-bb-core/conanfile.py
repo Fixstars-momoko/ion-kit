@@ -13,9 +13,9 @@ class IonBbCoreConan(ConanFile):
 
     def requirements(self):
         if self.options.bb_depends:
-            self.requires("ion-core/0.1.0")
+            self.requires("ion-core/0.2.0")
         if self.options.rt_depends:
-            self.requires("halide/[8.0.x]")
+            self.requires("halide/[10.0.x]")
             self.requires("cpp-httplib/0.7.18")
 
     def package(self):

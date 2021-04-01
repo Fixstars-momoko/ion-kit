@@ -2117,5 +2117,3 @@ ION_REGISTER_BUILDING_BLOCK(ion::bb::core::Cast4DFloatToUInt16, core_cast_4d_flo
 ION_REGISTER_BUILDING_BLOCK(ion::bb::core::ScalarToFuncUInt8, core_scalar_to_func_uint8);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::core::ScalarToFuncUInt16, core_scalar_to_func_uint16);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::core::ScalarToFuncFloat, core_scalar_to_func_float);
-
-#endif
