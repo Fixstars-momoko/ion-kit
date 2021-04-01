@@ -3,7 +3,7 @@ from conans import ConanFile, CMake
 
 class IonCoreConan(ConanFile):
     name = "ion-core"
-    version = "0.1.0"
+    version = "0.2.0"
     license = "MIT"
     url = "https://github.com/fixstars/ion-kit"
     description = "The library to build and compile pipelines"
@@ -11,7 +11,7 @@ class IonCoreConan(ConanFile):
     options = {"run_test": [True, False]}
     default_options = {"run_test": False}
     generators = "cmake"
-    requires = "halide/[8.0.x]", "nlohmann_json/3.9.1"
+    requires = "halide/[10.0.x]", "nlohmann_json/3.9.1"
     exports_sources = "*"
 
     _cmake = None

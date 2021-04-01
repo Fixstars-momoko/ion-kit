@@ -6,7 +6,7 @@
 
 #include <Halide.h>
 
-#include "ion/json.hpp"
+#include <nlohmann/json.hpp>
 
 namespace ion {
 

@@ -25,6 +25,7 @@ option(ION_BUILD_TEST "Enable to build tests" ON)
 option(ION_BUNDLE_HALIDE "Enable to bundle halide binary into package" OFF)
 option(ION_ENABLE_HALIDE_FPGA_BACKEND "Enable to Halide FPGA backend" OFF)
 # option(WITH_CUDA "Enable CUDA with buliding examples." ON)
+option(ENABLE_PACKAGE "Enable to build deb package" OFF)
 
 #
 # CMake common settings
@@ -169,20 +170,22 @@ endif()
 #
 # Packaging
 #
-if (UNIX)
-    set(CPACK_GENERATOR "TGZ" "DEB")
-    set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Fixstars Corporation Inc.")
-    configure_file(${CMAKE_SOURCE_DIR}/ion-kit.pc.in ${CMAKE_BINARY_DIR}/ion-kit.pc @ONLY)
-    install(FILES ${CMAKE_BINARY_DIR}/ion-kit.pc DESTINATION lib/pkgconfig/)
-else ()
-    set(CPACK_GENERATOR "ZIP")
-endif ()
-execute_process(COMMAND git describe --tags
-    OUTPUT_VARIABLE GIT_DESCRIBE_RESULT
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-message(STATUS "Version: ${GIT_DESCRIBE_RESULT}")
-string(STRIP "${GIT_DESCRIBE_RESULT}" ION_KIT_VERSION_S)
-string(REPLACE "v" "" ION_KIT_VERSION ${ION_KIT_VERSION_S})
-set(CPACK_PACKAGE_VERSION ${ION_KIT_VERSION})
-include(CPack)
+if (ENABLE_PACKAGE)
+    if (UNIX)
+        set(CPACK_GENERATOR "TGZ" "DEB")
+        set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+        set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Fixstars Corporation Inc.")
+        configure_file(${CMAKE_SOURCE_DIR}/ion-kit.pc.in ${CMAKE_BINARY_DIR}/ion-kit.pc @ONLY)
+        install(FILES ${CMAKE_BINARY_DIR}/ion-kit.pc DESTINATION lib/pkgconfig/)
+    else ()
+        set(CPACK_GENERATOR "ZIP")
+    endif ()
+    execute_process(COMMAND git describe --tags
+        OUTPUT_VARIABLE GIT_DESCRIBE_RESULT
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+    message(STATUS "Version: ${GIT_DESCRIBE_RESULT}")
+    string(STRIP "${GIT_DESCRIBE_RESULT}" ION_KIT_VERSION_S)
+    string(REPLACE "v" "" ION_KIT_VERSION ${ION_KIT_VERSION_S})
+    set(CPACK_PACKAGE_VERSION ${ION_KIT_VERSION})
+    include(CPack)
+endif()

@@ -23,7 +23,7 @@
 #define user_assert(c)            _halide_internal_assertion(c, Halide::Internal::ErrorReport::User)
 #endif
 
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 
 // Halide/src/Generator.h
 
