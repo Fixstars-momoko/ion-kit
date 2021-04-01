@@ -1,6 +1,3 @@
-#ifndef ION_BB_CORE_RT_H
-#define ION_BB_CORE_RT_H
-
 #include <fstream>
 #include <random>
 #include <string>
@@ -198,5 +195,3 @@ extern "C" ION_EXPORT int ion_bb_core_random_buffer(int32_t instance_id, int32_t
 }
 
 #undef ION_EXPORT
-
-#endif

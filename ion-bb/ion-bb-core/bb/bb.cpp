@@ -1,6 +1,3 @@
-#ifndef ION_BB_CORE_BB_H
-#define ION_BB_CORE_BB_H
-
 #include <ion/ion.h>
 
 namespace ion {
@@ -2088,5 +2085,3 @@ ION_REGISTER_BUILDING_BLOCK(ion::bb::core::Cast1DFloatToUInt16, core_cast_1d_flo
 ION_REGISTER_BUILDING_BLOCK(ion::bb::core::Cast2DFloatToUInt16, core_cast_2d_float_to_uint16);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::core::Cast3DFloatToUInt16, core_cast_3d_float_to_uint16);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::core::Cast4DFloatToUInt16, core_cast_4d_float_to_uint16);
-
-#endif
