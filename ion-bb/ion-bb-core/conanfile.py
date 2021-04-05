@@ -1,4 +1,4 @@
-from conans import ConanFile
+from conans import ConanFile, CMake
 
 
 class IonBbCoreConan(ConanFile):
@@ -7,23 +7,36 @@ class IonBbCoreConan(ConanFile):
     license = "MIT"
     url = "https://github.com/fixstars/ion-kit"
     description = "Core BB"
-    options = {"bb_depends": [True, False], "rt_depends": [True, False]}
-    default_options = {"bb_depends": True, "rt_depends": True}
+    options = {"enable_bb": [True, False], "enable_rt": [True, False]}
+    default_options = {"enable_bb": True, "enable_rt": True}
+    generators = "cmake"
     exports_sources = "*"
 
     def requirements(self):
-        if self.options.bb_depends:
+        if self.options.enable_bb:
             self.requires("ion-core/0.2.0")
-        if self.options.rt_depends:
+        if self.options.enable_rt:
             self.requires("halide/[10.0.x]")
             self.requires("cpp-httplib/0.7.18")
 
+    def build(self):
+        cmake = CMake(self)
+        cmake.definitions["BUILD_BB"] = self.options.enable_bb
+        cmake.definitions["BUILD_RT"] = self.options.enable_rt
+        cmake.definitions["BB_NAME"] = self.name
+        cmake.configure()
+        cmake.build()
+
     def package(self):
-        self.copy("*.h", dst="include")
-        self.copy("*.hpp", dst="include")
-        self.copy("*.cpp", dst="src")
-        self.copy("*.cc", dst="src")
-        self.copy("*.cmake")
+        self.copy("*.h")
+        self.copy("*.hpp")
+        self.copy("*.so")
+        self.copy("*.a")
+        self.copy("*.dll")
+        self.copy("*.lib")
 
     def package_info(self):
-        self.cpp_info.srcdirs = ["src"]
+        if self.options.enable_bb:
+            self.cpp_info.libs.append(self.name + "-bb")
+        if self.options.enable_rt:
+            self.cpp_info.libs.append(self.name + "-rt")

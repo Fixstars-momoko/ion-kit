@@ -6,4 +6,4 @@ ion-bb-core/1.0.0
 cmake
 
 [options]
-ion-bb-core:rt_depends=False
+ion-bb-*:enable_rt=False
