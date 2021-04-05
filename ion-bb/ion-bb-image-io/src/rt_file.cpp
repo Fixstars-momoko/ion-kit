@@ -1,6 +1,3 @@
-#ifndef ION_BB_IMAGE_IO_RT_FILE_H
-#define ION_BB_IMAGE_IO_RT_FILE_H
-
 #include <cstring>
 #include <string>
 #include <tuple>
@@ -79,5 +76,3 @@ extern "C" int ION_EXPORT ion_bb_image_io_image_saver(halide_buffer_t *in, int32
 
     return 0;
 }
-
-#endif

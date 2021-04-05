@@ -1,10 +1,5 @@
-#ifndef ION_BB_IMAGE_IO_RT_REALSENSE_H
-#define ION_BB_IMAGE_IO_RT_REALSENSE_H
-
 #include <cstring>
 #include <iostream>
-
-#include <HalideBuffer.h>
 
 #include "rt_common.h"
 
@@ -378,5 +373,3 @@ extern "C" int ION_EXPORT ion_bb_image_io_realsense_d435_frameset(halide_buffer_
         return -1;
     }
 }
-
-#endif

@@ -1,6 +1,3 @@
-#ifndef ION_BB_IMAGE_IO_BB_H
-#define ION_BB_IMAGE_IO_BB_H
-
 #include <ion/ion.h>
 #include <linux/videodev2.h>
 
@@ -449,5 +446,3 @@ ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GUIDisplay, image_io_gui_display)
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::FBDisplay, image_io_fb_display);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::ImageLoader, image_io_image_loader);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::ImageSaver, image_io_image_saver);
-
-#endif

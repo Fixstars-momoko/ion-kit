@@ -1,7 +1,5 @@
-#ifndef ION_BB_IMAGE_IO_RT_DISPLAY_H
-#define ION_BB_IMAGE_IO_RT_DISPLAY_H
-
 #include <stdexcept>
+#include <thread>
 
 #include <fcntl.h>
 #include <linux/fb.h>
@@ -10,8 +8,6 @@
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-
-#include <HalideBuffer.h>
 
 #include "rt_common.h"
 
@@ -132,5 +128,3 @@ extern "C" ION_EXPORT int ion_bb_image_io_gui_display(halide_buffer_t *in, int w
 
     return 0;
 }
-
-#endif

@@ -1,6 +1,3 @@
-#ifndef ION_BB_IMAGE_IO_RT_V4L2_H
-#define ION_BB_IMAGE_IO_RT_V4L2_H
-
 #include <cstdlib>
 #include <map>
 #include <memory>
@@ -18,11 +15,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <HalideBuffer.h>
-
 #include "rt_common.h"
 
-#include "httplib.h"
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
@@ -492,5 +486,3 @@ extern "C" int ION_EXPORT ion_bb_image_io_camera(int32_t instance_id, int32_t wi
 
     return 0;
 }
-
-#endif
