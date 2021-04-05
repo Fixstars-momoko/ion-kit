@@ -8,7 +8,11 @@
 
 #include "httplib.h"
 
-#include "ion-bb-core/rt.h"
+#ifdef _WIN32
+#define ION_EXPORT __declspec(dllexport)
+#else
+#define ION_EXPORT
+#endif
 
 namespace ion {
 namespace bb {

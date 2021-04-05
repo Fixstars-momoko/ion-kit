@@ -28,8 +28,8 @@ class IonBbCoreConan(ConanFile):
         cmake.build()
 
     def package(self):
-        self.copy("*.h")
-        self.copy("*.hpp")
+        self.copy("*.h", src="include")
+        self.copy("*.hpp", src="include")
         self.copy("*.so")
         self.copy("*.a")
         self.copy("*.dll")
