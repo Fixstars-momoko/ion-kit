@@ -1,4 +1,5 @@
-from conans import ConanFile, CMake
+from conans import ConanFile, CMake, tools
+from conans.errors import ConanException
 
 
 class IonBbCoreConan(ConanFile):
@@ -7,8 +8,8 @@ class IonBbCoreConan(ConanFile):
     license = "MIT"
     url = "https://github.com/fixstars/ion-kit"
     description = "Core BB"
-    options = {"enable_bb": [True, False], "enable_rt": [True, False]}
-    default_options = {"enable_bb": True, "enable_rt": True}
+    options = {"enable_bb": [True, False], "enable_rt": [True, False], "enable_realsense": [True, False], "enable_runtime": [True, False]}
+    default_options = {"enable_bb": True, "enable_rt": True, "enable_realsense": False, "enable_runtime": False}
     generators = "cmake"
     exports_sources = "*"
 
@@ -20,11 +21,34 @@ class IonBbCoreConan(ConanFile):
             self.requires("cpp-httplib/0.7.18")
             self.requires("opencv/4.5.1")
 
+    def system_requirements(self):
+        if self.options.enable_rt and self.options.enable_realsense:
+            repository_url = None
+            if tools.os_info.linux_distro == "ubuntu":
+                repository_list = {
+                    "16.04": "deb https://librealsense.intel.com/Debian/apt-repo xenial main",
+                    "18.04": "deb https://librealsense.intel.com/Debian/apt-repo bionic main",
+                    "20.04": "deb https://librealsense.intel.com/Debian/apt-repo focal main"
+                }
+                repository_url = repository_list.get(str(tools.os_info.os_version), None)
+            if repository_url is None:
+                raise ConanException("Realsense library is supported on Ubuntu LTS")
+
+            packages = ["librealsense2-utils", "librealsense2-dev"]
+            if self.options.enable_runtime:
+                packages.append("librealsense2-dkms")
+
+            package_tool = tools.SystemPackageTool(conanfile=self)
+            if not all(map(package_tool.installed, packages)):
+                package_tool.add_repository(repository_url, "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6E65AC044F831AC80A06380C8B3A55A6F3EFCDE")
+                package_tool.install_packages(packages)
+
     def build(self):
         cmake = CMake(self)
         cmake.definitions["BUILD_BB"] = self.options.enable_bb
         cmake.definitions["BUILD_RT"] = self.options.enable_rt
         cmake.definitions["BB_NAME"] = self.name
+        cmake.definitions["ENABLE_REALSENSE"] = self.options.enable_realsense
         cmake.configure()
         cmake.build()
 

@@ -7,11 +7,12 @@ conan_basic_setup()
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 11)
 
-include(config.cmake)
-
 set(BB_NAME "" CACHE STRINGS "BB name")
 set(BUILD_BB off CACHE BOOL "Build bb lib")
 set(BUILD_RT off CACHE BOOL "Build runtime lib")
+set(ENABLE_REALSENSE off CACHE BOOL "Enable realsense BB")
+
+include(config.cmake)
 
 link_directories(${ION_BB_LINK_DIRS})
 
