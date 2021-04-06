@@ -40,7 +40,12 @@ class IonBbCoreConan(ConanFile):
 
             package_tool = tools.SystemPackageTool(conanfile=self)
             if not all(map(package_tool.installed, packages)):
-                package_tool.add_repository(repository_url, "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6E65AC044F831AC80A06380C8B3A55A6F3EFCDE")
+                # Workaround of add_repository bug
+                # package_tool.add_repository(repository_url, "http://keyserver.ubuntu.com/pks/lookup?op=get&search=0xF6E65AC044F831AC80A06380C8B3A55A6F3EFCDE")
+                self.run(
+                    "sudo apt-key adv --keyserver keys.gnupg.net --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE || sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE"
+                )
+                self.run(f'sudo add-apt-repository "{repository_url}"')
                 package_tool.install_packages(packages)
 
     def build(self):
