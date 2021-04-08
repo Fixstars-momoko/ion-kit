@@ -8,9 +8,9 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "json.hpp"
+#include <nlohmann/json.hpp>
+#include <openssl/sha.h>
 
-#include "picosha2.h"
 #include "rt_util.h"
 
 //
@@ -166,9 +166,19 @@ private:
 
         auto model_url = model_root_url + model_name;
 
-        std::vector<unsigned char> hash(picosha2::k_digest_size);
-        picosha2::hash256(model_url.begin(), model_url.end(), hash.begin(), hash.end());
-        auto hash_str = picosha2::bytes_to_hex_string(hash.begin(), hash.end());
+        unsigned char hash[SHA256_DIGEST_LENGTH];
+        SHA256_CTX sha256;
+        SHA256_Init(&sha256);
+        SHA256_Update(&sha256, model_url.c_str(), model_url.size());
+        SHA256_Final(hash, &sha256);
+        std::string hash_str;
+        {
+            std::stringstream ss;
+            for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+                ss << std::setw(2) << std::hex << std::setfill('0') << static_cast<unsigned int>(hash[i]);
+            }
+            hash_str = ss.str();
+        }
 
         std::ifstream ifs(cache_root + model_name + "." + hash_str, std::ios::binary);
 

@@ -1,6 +1,3 @@
-#ifndef ION_BB_INTERNAL_BB_H
-#define ION_BB_INTERNAL_BB_H
-
 #include "ion/ion.h"
 
 namespace ion {
@@ -11,8 +8,8 @@ class Schedule : public ion::BuildingBlock<Schedule> {
 public:
     GeneratorParam<std::string> output_name{"output_name", ""};
     GeneratorParam<bool> output_replace{"output_replace", false};
-    GeneratorParam<std::string> compute_level{"compute_level", ""}; // "compute_inline" or "compute_root"
-    GeneratorParam<std::string> concurrency{"concurrency", ""}; // comma separated string
+    GeneratorParam<std::string> compute_level{"compute_level", ""};  // "compute_inline" or "compute_root"
+    GeneratorParam<std::string> concurrency{"concurrency", ""};      // comma separated string
 
     GeneratorInput<Halide::Func> input{"input"};
     GeneratorOutput<Halide::Func> output{"output"};
@@ -37,7 +34,7 @@ public:
                 } else {
                     Var x = f.args()[0];
                     Var y = f.args()[1];
-                    for (int i=2; i<f.args().size(); ++i) {
+                    for (int i = 2; i < f.args().size(); ++i) {
                         f.fuse(y, f.args()[i], y);
                     }
                     Var xo, yo, xi, yi;
@@ -51,7 +48,7 @@ public:
                 } else {
                     Var x = f.args()[0];
                     Var y = f.args()[1];
-                    for (int i=2; i<f.args().size(); ++i) {
+                    for (int i = 2; i < f.args().size(); ++i) {
                         f.fuse(y, f.args()[i], y);
                     }
                     f.parallel(y);
@@ -69,9 +66,9 @@ public:
     }
 };
 
-} // internal
-} // bb
-} // ion
+}  // namespace internal
+}  // namespace bb
+}  // namespace ion
 
 ION_REGISTER_BUILDING_BLOCK(ion::bb::internal::Schedule, internal_schedule);
 
@@ -83,7 +80,7 @@ class ScheduleForPreview : public ion::BuildingBlock<ScheduleForPreview> {
 public:
     GeneratorParam<std::string> output_name{"output_name", ""};
     GeneratorParam<bool> output_replace{"output_replace", false};
-    GeneratorParam<std::string> compute_level{"compute_level", ""}; // "compute_inline" or "compute_root"
+    GeneratorParam<std::string> compute_level{"compute_level", ""};  // "compute_inline" or "compute_root"
 
     GeneratorInput<Halide::Func> input{"input"};
     GeneratorOutput<Halide::Func> output{"output"};
@@ -107,12 +104,8 @@ public:
     }
 };
 
-} // internal
-} // bb
-} // ion
+}  // namespace internal
+}  // namespace bb
+}  // namespace ion
 
 ION_REGISTER_BUILDING_BLOCK(ion::bb::internal::ScheduleForPreview, internal_schedule_for_preview);
-
-// #include "bb_sgm.h"
-
-#endif

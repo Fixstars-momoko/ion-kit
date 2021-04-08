@@ -1,6 +1,3 @@
-#ifndef ION_BB_SGM_BB_H
-#define ION_BB_SGM_BB_H
-
 #include <climits>
 #include <ion/ion.h>
 
@@ -829,5 +826,3 @@ ION_REGISTER_BUILDING_BLOCK(ion::bb::sgm::ScanCost, sgm_scan_cost);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::sgm::AddCost4, sgm_add_cost4);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::sgm::Disparity, sgm_disparity);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::sgm::SGM, sgm_sgm);
-
-#endif

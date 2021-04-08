@@ -1,6 +1,3 @@
-#ifndef ION_BB_OPENCV_RT_H
-#define ION_BB_OPENCV_RT_H
-
 #include <HalideBuffer.h>
 
 #include <opencv2/highgui.hpp>
@@ -25,11 +22,9 @@ int hl2cv_type(halide_type_t hl_type, int channel) {
         return -1;
     }
 }
-} // namespace
+}  // namespace
 
-
-extern "C" ION_EXPORT
-int median_blur(halide_buffer_t *in, int channel, int width, int height, int ksize, halide_buffer_t *out) {
+extern "C" ION_EXPORT int median_blur(halide_buffer_t *in, int channel, int width, int height, int ksize, halide_buffer_t *out) {
     if (in->is_bounds_query()) {
         in->dim[0].min = 0;
         in->dim[0].extent = channel;
@@ -50,11 +45,10 @@ int median_blur(halide_buffer_t *in, int channel, int width, int height, int ksi
     return 0;
 }
 
-extern "C" ION_EXPORT
-int display(halide_buffer_t *in, int width, int height, int idx, halide_buffer_t *out) {
+extern "C" ION_EXPORT int display(halide_buffer_t *in, int width, int height, int idx, halide_buffer_t *out) {
     if (in->is_bounds_query()) {
         in->dim[0].min = 0;
-        in->dim[0].extent = 3; // RGB
+        in->dim[0].extent = 3;  // RGB
         in->dim[1].min = 0;
         in->dim[1].extent = width;
         in->dim[2].min = 0;
@@ -69,5 +63,3 @@ int display(halide_buffer_t *in, int width, int height, int idx, halide_buffer_t
 }
 
 #undef ION_EXPORT
-
-#endif // ION_BB_OPENCV_RT_H

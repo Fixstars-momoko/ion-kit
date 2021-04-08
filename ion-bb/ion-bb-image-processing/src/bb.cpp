@@ -1,6 +1,3 @@
-#ifndef ION_BB_IMAGE_PROCESSING_BB_H
-#define ION_BB_IMAGE_PROCESSING_BB_H
-
 #include <ion/ion.h>
 
 namespace ion {
@@ -2016,5 +2013,3 @@ ION_REGISTER_BUILDING_BLOCK(ion::bb::image_processing::CropImage3DFloat, image_p
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_processing::ColorSpaceConverterRGBToHSV, image_processing_color_space_converter_rgb_to_hsv);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_processing::ColorSpaceConverterHSVToRGB, image_processing_color_space_converter_hsv_to_rgb);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_processing::ColorAdjustment, image_processing_color_adjustment);
-
-#endif

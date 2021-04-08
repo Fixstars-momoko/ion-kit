@@ -1,6 +1,3 @@
-#ifndef ION_BB_OPENCV_BB_H
-#define ION_BB_OPENCV_BB_H
-
 #include <ion/ion.h>
 
 class MedianBlur : public ion::BuildingBlock<MedianBlur> {
@@ -59,5 +56,3 @@ private:
     Halide::Var x, y;
 };
 ION_REGISTER_BUILDING_BLOCK(Display, opencv_display);
-
-#endif // ION_BB_OPENCV_BB_H
