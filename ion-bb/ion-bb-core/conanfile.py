@@ -7,8 +7,6 @@ class IonBbCoreConan(ConanFile):
     license = "MIT"
     url = "https://github.com/fixstars/ion-kit"
     description = "Core BB"
-    options = {"enable_bb": [True, False], "enable_rt": [True, False]}
-    default_options = {"enable_bb": True, "enable_rt": True}
     generators = "cmake"
     exports_sources = "*"
     python_requires = "ion-bb-base/1.0.0"

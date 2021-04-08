@@ -1,30 +1,40 @@
 from conans import ConanFile, CMake, tools
+from conans.errors import ConanException
 import shutil, os
 
 
 class IonBbBase(object):
+    settings = "os", "compiler", "build_type", "arch"
     options = {"enable_bb": [True, False], "enable_rt": [True, False]}
     default_options = {"enable_bb": True, "enable_rt": True}
     generators = "cmake"
-    cmake_definitions = {}
-    bb_requires = {}
 
-    def _get_list(self, name):
-        l = getattr(self, name, None)
-        if not l:
-            return ()
-        if isinstance(l, (tuple, list)):
-            return tuple(l)
-        else:
-            return l,
+    def _add_requires(self, name):
+        reqs = getattr(self, name, None)
+        if not reqs:
+            return
+        if not isinstance(reqs, (tuple, list)):
+            reqs = reqs,
+        for req in reqs:
+            if isinstance(req, tuple):
+                override = private = False
+                ref = req[0]
+                for elem in req[1:]:
+                    if elem == "override":
+                        override = True
+                    elif elem == "private":
+                        private = True
+                    else:
+                        raise ConanException("Unknown requirement config %s" % elem)
+                self.requires(ref, private=private, override=override)
+            else:
+                self.requires(req)
 
     def requirements(self):
         if self.options.enable_bb:
-            for name in self._get_list("bb_requires"):
-                self.requires(name)
+            self._add_requires("bb_requires")
         if self.options.enable_rt:
-            for name in self._get_list("rt_requires"):
-                self.requires(name)
+            self._add_requires("rt_requires")
 
     def build(self):
         shutil.copy(
