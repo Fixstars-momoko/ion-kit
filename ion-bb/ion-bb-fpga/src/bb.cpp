@@ -1,6 +1,3 @@
-#ifndef ION_BB_FPGA_BB_H
-#define ION_BB_FPGA_BB_H
-
 #include <ion/ion.h>
 
 namespace ion {
@@ -977,5 +974,3 @@ ION_REGISTER_BUILDING_BLOCK(ion::bb::fpga::BayerDownscaleUInt16, fpga_bayer_down
 ION_REGISTER_BUILDING_BLOCK(ion::bb::fpga::NormalizeRawImage, fpga_normalize_raw_image);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::fpga::SimpleISP, fpga_simple_isp);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::fpga::SimpleISPWithUnsharpMask, fpga_simple_isp_with_unsharp_mask);
-
-#endif

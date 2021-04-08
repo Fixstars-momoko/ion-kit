@@ -16,6 +16,10 @@ class IonCoreConan(ConanFile):
 
     _cmake = None
 
+    def _fpga_backend_enabled(self):
+        return getattr(self.deps_user_info["halide"], "enable_fpga_backend",
+                       None) == "True"
+
     def _configure_cmake(self):
         if self._cmake:
             return self._cmake
@@ -26,6 +30,8 @@ class IonCoreConan(ConanFile):
         self._cmake.definitions[
             "ION_BUILD_TEST"] = "ON" if self.options.run_test else "OFF"
         self._cmake.definitions["ION_BUNDLE_HALIDE"] = "OFF"
+        self._cmake.definitions[
+            "ION_ENABLE_HALIDE_FPGA_BACKEND"] = self._fpga_backend_enabled()
         self._cmake.configure()
         return self._cmake
 
@@ -41,3 +47,5 @@ class IonCoreConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = ["ion-core"]
+        if self._fpga_backend_enabled():
+            self.cpp_info.defines = ["HALIDE_FOR_FPGA"]

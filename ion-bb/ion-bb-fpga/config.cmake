@@ -1,6 +1,1 @@
-if (UNIX)
-    set(LIBRARIES
-        rt
-        dl
-        pthread)
-endif()
+set(BB_SRCS src/bb.cpp)
