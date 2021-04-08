@@ -1,25 +1,21 @@
-from conans import ConanFile, CMake, tools
+from conans import ConanFile, tools
 from conans.errors import ConanException
 
 
-class IonBbCoreConan(ConanFile):
+class IonBbImageIoConan(ConanFile):
     name = "ion-bb-image-io"
     version = "1.0.0"
     license = "MIT"
     url = "https://github.com/fixstars/ion-kit"
-    description = "Core BB"
+    description = "Image I/O BB"
     options = {"enable_bb": [True, False], "enable_rt": [True, False], "enable_realsense": [True, False], "enable_runtime": [True, False]}
     default_options = {"enable_bb": True, "enable_rt": True, "enable_realsense": False, "enable_runtime": False}
     generators = "cmake"
     exports_sources = "*"
-
-    def requirements(self):
-        if self.options.enable_bb:
-            self.requires("ion-core/0.2.0")
-        if self.options.enable_rt:
-            self.requires("halide/[10.0.x]")
-            self.requires("cpp-httplib/0.7.18")
-            self.requires("opencv/4.5.1")
+    python_requires = "ion-bb-base/1.0.0"
+    python_requires_extend = "ion-bb-base.IonBbBase"
+    bb_requires = "ion-core/0.2.0"
+    rt_requires = "halide/[10.0.x]", "cpp-httplib/0.7.18", "opencv/4.5.1"
 
     def system_requirements(self):
         if self.options.enable_rt and self.options.enable_realsense:
@@ -49,24 +45,7 @@ class IonBbCoreConan(ConanFile):
                 package_tool.install_packages(packages)
 
     def build(self):
-        cmake = CMake(self)
-        cmake.definitions["BUILD_BB"] = self.options.enable_bb
-        cmake.definitions["BUILD_RT"] = self.options.enable_rt
-        cmake.definitions["BB_NAME"] = self.name
-        cmake.definitions["ENABLE_REALSENSE"] = self.options.enable_realsense
-        cmake.configure()
-        cmake.build()
-
-    def package(self):
-        self.copy("*.h", src="include")
-        self.copy("*.hpp", src="include")
-        self.copy("*.so")
-        self.copy("*.a")
-        self.copy("*.dll")
-        self.copy("*.lib")
-
-    def package_info(self):
-        if self.options.enable_bb:
-            self.cpp_info.libs.append(self.name + "-bb")
-        if self.options.enable_rt:
-            self.cpp_info.libs.append(self.name + "-rt")
+        self.cmake_definitions = {
+            "ENABLE_REALSENSE": self.options.enable_realsense
+        }
+        super().build()

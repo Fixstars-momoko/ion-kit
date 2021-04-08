@@ -6,6 +6,8 @@ set(RT_SRCS
     src/rt_v4l2.cpp
 )
 
+set(ENABLE_REALSENSE off CACHE BOOL "Enable realsense BB")
+
 if(ENABLE_REALSENSE)
     list(APPEND BB_SRCS src/bb_realsense.cpp)
     list(APPEND RT_SRCS src/rt_realsense.cpp)
