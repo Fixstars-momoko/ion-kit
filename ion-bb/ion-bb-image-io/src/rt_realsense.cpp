@@ -3,6 +3,7 @@
 
 #include "rt_common.h"
 
+#ifdef ENABLE_REALSENSE
 namespace ion {
 namespace bb {
 namespace image_io {
@@ -259,13 +260,12 @@ private:
 }  // namespace image_io
 }  // namespace bb
 }  // namespace ion
+#endif
 
 extern "C" int ION_EXPORT ion_bb_image_io_realsense_d435_infrared(halide_buffer_t *in, halide_buffer_t *out_l, halide_buffer_t *out_r) {
     try {
         const int width = 1280;
         const int height = 720;
-
-        auto &realsense(ion::bb::image_io::RealSense::get_instance(width, height));
 
         if (out_l->is_bounds_query() || out_r->is_bounds_query()) {
             if (out_l->is_bounds_query()) {
@@ -284,17 +284,21 @@ extern "C" int ION_EXPORT ion_bb_image_io_realsense_d435_infrared(halide_buffer_
             Halide::Runtime::Buffer<uint8_t> obuf_l(*out_l);
             Halide::Runtime::Buffer<uint8_t> obuf_r(*out_r);
 
+#ifdef ENABLE_REALSENSE
+            auto &realsense(ion::bb::image_io::RealSense::get_instance(width, height));
             void *frameset = reinterpret_cast<void *>(Halide::Runtime::Buffer<uint64_t>(*in)());
             if (frameset) {
                 std::memcpy(obuf_l.data(), realsense.get_frame_ptr(frameset, 1), obuf_l.size_in_bytes());
                 std::memcpy(obuf_r.data(), realsense.get_frame_ptr(frameset, 2), obuf_r.size_in_bytes());
-            } else {
-                // Simulation mode
-                for (int y = 0; y < height; ++y) {
-                    for (int x = 0; x < width; ++x) {
-                        obuf_l(x, y) = (y * width + x) % 256;
-                        obuf_r(x, y) = (y * width + x) % 256;
-                    }
+                return 0;
+            }
+#endif
+
+            // Simulation mode
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    obuf_l(x, y) = (y * width + x) % 256;
+                    obuf_r(x, y) = (y * width + x) % 256;
                 }
             }
         }
@@ -313,8 +317,6 @@ extern "C" int ION_EXPORT ion_bb_image_io_realsense_d435_depth(halide_buffer_t *
         const int width = 1280;
         const int height = 720;
 
-        auto &realsense(ion::bb::image_io::RealSense::get_instance(width, height));
-
         if (out_d->is_bounds_query()) {
             if (out_d->is_bounds_query()) {
                 out_d->dim[0].min = 0;
@@ -324,15 +326,20 @@ extern "C" int ION_EXPORT ion_bb_image_io_realsense_d435_depth(halide_buffer_t *
             }
         } else {
             Halide::Runtime::Buffer<uint16_t> obuf_d(*out_d);
+
+#ifdef ENABLE_REALSENSE
+            auto &realsense(ion::bb::image_io::RealSense::get_instance(width, height));
             void *frameset = reinterpret_cast<void *>(Halide::Runtime::Buffer<uint64_t>(*in)());
             if (frameset) {
                 std::memcpy(obuf_d.data(), realsense.get_frame_ptr(frameset, 0), obuf_d.size_in_bytes());
-            } else {
-                // Simulation mode
-                for (int y = 0; y < height; ++y) {
-                    for (int x = 0; x < width; ++x) {
-                        obuf_d(x, y) = static_cast<uint16_t>((y * width + x) % 65536);
-                    }
+                return 0;
+            }
+#endif
+
+            // Simulation mode
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    obuf_d(x, y) = static_cast<uint16_t>((y * width + x) % 65536);
                 }
             }
         }
@@ -351,18 +358,21 @@ extern "C" int ION_EXPORT ion_bb_image_io_realsense_d435_frameset(halide_buffer_
         const int width = 1280;
         const int height = 720;
 
-        auto &realsense(ion::bb::image_io::RealSense::get_instance(width, height));
-
         if (out->is_bounds_query()) {
             // out->dim[0].min = 0;
             // out->dim[0].extent = 1;
         } else {
             Halide::Runtime::Buffer<uint64_t> obuf(*out);
+
+#ifdef ENABLE_REALSENSE
+            auto &realsense(ion::bb::image_io::RealSense::get_instance(width, height));
             if (realsense.is_available()) {
                 realsense.get_frameset(obuf);
-            } else {
-                obuf() = reinterpret_cast<uint64_t>(nullptr);
+                return 0;
             }
+#endif
+
+            obuf() = reinterpret_cast<uint64_t>(nullptr);
         }
         return 0;
     } catch (const std::exception &e) {
