@@ -1,0 +1,9 @@
+[requires]
+ion-core/0.2.0
+ion-bb-core/1.0.0
+
+[generators]
+cmake
+
+[options]
+ion-bb-*:enable_bb=False

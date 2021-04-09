@@ -1,0 +1,7 @@
+[requires]
+ion-core/0.2.0
+ion-bb-image-io/1.0.0
+opencv/4.5.1
+
+[generators]
+cmake

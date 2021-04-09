@@ -1,0 +1,6 @@
+[requires]
+ion-core/0.2.0
+opencv/4.5.1
+
+[generators]
+cmake

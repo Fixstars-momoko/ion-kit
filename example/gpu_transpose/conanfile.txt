@@ -1,0 +1,5 @@
+[requires]
+ion-core/0.2.0
+
+[generators]
+cmake
