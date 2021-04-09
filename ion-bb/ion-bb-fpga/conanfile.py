@@ -15,7 +15,8 @@ class IonBbFpgaConan(ConanFile):
     bb_requires = "ion-core/0.2.0"
 
     def build(self):
-        if getattr(self.deps_user_info["halide"], "enable_fpga_backend",
-                   None) != "True":
+        if self.options.enable_bb and getattr(self.deps_user_info["halide"],
+                                              "enable_fpga_backend",
+                                              None) != "True":
             raise ConanException("This BB requires FPGA backend")
         super().build()
