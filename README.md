@@ -6,31 +6,29 @@ A framework to compile user-defined pipeline.
 
 ### Conanのインストール
 
+python3とpipは事前にインストールしてください。
+
 ```sh
 pip install conan
 ```
 
-### Halideのパッケージ作成
+### conanパッケージの準備
+
+下記コマンドを実行することで必要なconanパッケージがローカルに作成される。
 
 ```sh
-conan create external/halide-10
+./install_packages.sh
 ```
 
-### ion-kitのパッケージ作成
+### BBライブラリのパッケージ更新
+
+上記コマンドでBBライブラリはすべてエクスポートされるが、BBの実装に変更を加えた場合は更新が必要になる。
+
+更新する場合は更新したBBライブラリに対して下記のコマンドを実行すること。
+
 
 ```sh
-conan create ion-core
-```
-
-### BBライブラリのパッケージ作成
-
-今のところ`ion-bb-core`と`ion-bb-image-io`のみ。
-
-BB更新時は再度実行すること。
-
-```sh
-conan create ion-bb/ion-bb-core
-conan create ion-bb/ion-bb-image-io
+conan export [更新したBBライブラリ]
 ```
 
 ### サンプルのビルド(JIT)
@@ -40,7 +38,7 @@ conan create ion-bb/ion-bb-image-io
 ```sh
 mkdir build
 cd build
-conan install ..
+conan install .. --build=missing
 cmake ..
 make
 ```
@@ -52,7 +50,7 @@ make
 ```sh
 mkdir build
 cd build
-conan install ..
+conan install .. --build=missing
 cmake ..
 make
 ```
@@ -62,7 +60,7 @@ make
 ```sh
 mkdir build
 cd build
-conan install ..
+conan install .. --build=missing
 cmake ..
 make
 ```
