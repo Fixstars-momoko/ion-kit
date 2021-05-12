@@ -44,6 +44,10 @@ private:
     Halide::Var c, x, y;
 };
 
+bool has_feature(const std::string candidate, const std::string target) {
+    return candidate.find(target) != std::string::npos;
+}
+
 template<typename X, int32_t D>
 class ObjectDetectionBase : public BuildingBlock<X> {
     static_assert(D == 3 || D == 4, "D must be 3 or 4.");
@@ -55,6 +59,8 @@ public:
     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", ""};
     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
+    GeneratorParam<std::string> gc_required_features{"gc_required_features", "x86,arm64,cuda,dpu,edgetpu"};
+    GeneratorParam<std::string> gc_extra_features{"gc_extra_features", ""};
 
     GeneratorParam<std::string> model_root_url_{"model_base_url", "http://ion-archives.s3-us-west-2.amazonaws.com/models/"};
     GeneratorParam<std::string> cache_root_{"cache_root", "/tmp/"};
@@ -89,10 +95,12 @@ public:
         dnndk_enable = (this->get_target().has_feature(Target::Feature::DPU));
 #endif
 
+        const bool edgetpu_enable = has_feature(gc_extra_features, "edgetpu");
+
         input = Func{static_cast<std::string>(gc_prefix) + "in"};
         input(_) = input_(_);
 
-        std::vector<ExternFuncArgument> params{input, session_id_buf, model_root_url_buf, cache_path_buf, cuda_enable, dnndk_enable};
+        std::vector<ExternFuncArgument> params{input, session_id_buf, model_root_url_buf, cache_path_buf, cuda_enable, dnndk_enable, edgetpu_enable};
         Func object_detection(static_cast<std::string>(gc_prefix) + "object_detection");
         object_detection.define_extern("ion_bb_dnn_generic_object_detection", params, Float(32), D);
         object_detection.compute_root();

@@ -23,6 +23,7 @@ extern "C" ION_EXPORT int ion_bb_dnn_generic_object_detection(halide_buffer_t *i
                                                               halide_buffer_t *cache_root_buf,
                                                               bool cuda_enable,
                                                               bool dnndk_enable,
+                                                              bool edgetpu_enable,
                                                               halide_buffer_t *out) {
     try {
 
@@ -43,7 +44,7 @@ extern "C" ION_EXPORT int ion_bb_dnn_generic_object_detection(halide_buffer_t *i
 
         using namespace ion::bb::dnn;
 
-        if (is_tfl_available()) {
+        if (edgetpu_enable && is_tfl_available()) {
             // EdgeTPU
             return object_detection_tfl(in, model_root_url, cache_root, out);
         } else if (dnndk_enable && dnndk::is_dnndk_available()) {
