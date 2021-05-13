@@ -59,7 +59,7 @@ public:
     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", ""};
     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
-    GeneratorParam<std::string> gc_required_features{"gc_required_features", "x86,arm64,cuda,dpu,edgetpu"};
+    GeneratorParam<std::string> gc_required_features{"gc_required_features", "x86-64,arm-64,cuda,dpu,edgetpu"};
     GeneratorParam<std::string> gc_extra_features{"gc_extra_features", ""};
 
     GeneratorParam<std::string> model_root_url_{"model_base_url", "http://ion-archives.s3-us-west-2.amazonaws.com/models/"};
