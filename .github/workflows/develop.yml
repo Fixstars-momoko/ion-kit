@@ -40,15 +40,15 @@ jobs:
           ref: release/12.x
           fetch-depth: 1
 
-      - name: LLVM: create build environment
+      - name: create build environment
         run: cmake -E make_directory ${{runner.workspace}}/llvm-project/build
 
-      - name: LLVM: Configure CMake
+      - name: Configure CMake
         shell: bash
         working-directory: ${{runner.workspace}}/llvm-project/build
         run: cmake -GNinja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;Hexagon;PowerPC;AMDGPU;RISCV" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=OFF ../llvm
 
-      - name: LLVM: Build
+      - name: Build
         working-directory: ${{runner.workspace}}/llvm-project/build
         shell: bash
         run: cmake --build . --target install
@@ -60,15 +60,15 @@ jobs:
           ref: v12.0.1
           fetch-depth: 1
 
-      - name: Halide: create build environment
+      - name: create build environment
         run: cmake -E make_directory ${{runner.workspace}}/Halide/build
 
-      - name: Halide: Configure CMake
+      - name: Configure CMake
         shell: bash
         working-directory: ${{runner.workspace}}/Halide/build
         run: cmake -GNinja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DHALIDE_ENABLE_RTTI=ON -DWITH_APPS=OFF ..
 
-      - name: Halide: Build
+      - name: Build
         working-directory: ${{runner.workspace}}/Halide/build
         shell: bash
         run: cmake --build . --target install
