@@ -7,7 +7,7 @@ on:
 
 jobs:
   release-linux:
-    runs-on: ghcr.io/fixstars/ion-kit/builder-amd64:latest
+    runs-on: fixstarsiizuka/ion-kit-builder:latest
 
     steps:
       - uses: actions/checkout@v2

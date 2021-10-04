@@ -23,6 +23,7 @@ RUN pip3 install scikit-build
 RUN pip3 install cmake
 
 # LLVM 12
+WORKDIR /work
 RUN git clone https://github.com/llvm/llvm-project.git -b release/12.x --depth=1
 RUN mkdir llvm-project/build && cd llvm-project/build && \
     cmake -GNinja \
@@ -35,9 +36,11 @@ RUN mkdir llvm-project/build && cd llvm-project/build && \
         -DLLVM_ENABLE_RTTI=ON \
         -DLLVM_BUILD_32_BITS=OFF \
         ../llvm && \
-    cmake --build . --target install
+    cmake --build . --target install && \
+    rm -rf /work/llvm-project
 
 # Halide 12
+WORKDIR /work
 ARG HALIDE_GIT_URL=invalid
 ARG HALIDE_GIT_BRANCH=invalid
 RUN git clone ${HALIDE_GIT_URL} -b ${HALIDE_GIT_BRANCH} --depth=1
@@ -46,4 +49,5 @@ RUN mkdir -p Halide/build && cd Halide/build && \
         -DHALIDE_ENABLE_RTTI=ON \
         -DWITH_APPS=OFF \
         .. && \
-    cmake --build . --target install
+    cmake --build . --target install && \
+    rm -rf /work/Halide
