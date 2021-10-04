@@ -7,22 +7,15 @@ on:
 
 jobs:
   release-linux:
-    runs-on: fixstarsiizuka/ion-kit-builder:latest
+    runs-on: ubuntu-18.04
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Get latest CMake and ninja
-        uses: lukka/get-cmake@latest
-
-      - name: Setup OpenCV
-        uses: Dovyski/setup-opencv-action@v1
-        with:
-          opencv-version: '4.5.2'
-
-      - name: Setup extra dependencies
+      # Base
+      - name: Setup base dependencies
         run: |
           # Packages
           sudo apt-get update
@@ -30,17 +23,56 @@ jobs:
           sudo apt-get clean
           sudo rm -rf /var/lib/apt/lists/*
 
-          # Halide
-          mkdir ${HOME}/halide
-          curl -L https://github.com/halide/Halide/releases/download/v12.0.1/Halide-12.0.1-x86-64-linux-5dabcaa9effca1067f907f6c8ea212f3d2b1d99a.tar.gz | tar zx -C ${HOME}/halide --strip-components 1
-          find ${HOME}/halide -type d | xargs chmod 755
-          sudo mv ${HOME}/halide /usr/local/
+      - name: Get latest CMake and ninja
+        uses: lukka/get-cmake@latest
 
-      - name: Configure
-        run: cmake -G Ninja -D CMAKE_BUILD_TYPE=Release -D CMAKE_PREFIX_PATH=/usr/local/halide -D ION_BUILD_ALL_BB=OFF -D ION_BUILD_DOC=OFF -D ION_BUILD_TEST=OFF -D ION_BUILD_EXAMPLE=OFF -D ION_BUNDLE_HALIDE=ON -D WITH_CUDA=OFF $GITHUB_WORKSPACE
+      # LLVM
+      - uses: actions/checkout@v2
+        with:
+          repository: https://github.com/llvm/llvm-project.git
+          ref: release/12.x
+          fetch-depth: 1
 
-      - name: Build
-        run: cmake --build . --config Release --target package
+      - name: LLVM: create build environment
+        run: cmake -E make_directory ${{runner.workspace}}/llvm-project/build
+
+      - name: LLVM: Configure CMake
+        shell: bash
+        working-directory: ${{runner.workspace}}/llvm-project/build
+        run: cmake -GNinja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;Hexagon;PowerPC;AMDGPU;RISCV" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=OFF ../llvm
+
+      - name: LLVM: Build
+        working-directory: ${{runner.workspace}}/llvm-project/build
+        shell: bash
+        run: cmake --build . --target install
+
+      # Halide
+      - uses: actions/checkout@v2
+        with:
+          repository: https://github.com/halide/Halide.git
+          ref: v12.0.1
+          fetch-depth: 1
+
+      - name: Halide: create build environment
+        run: cmake -E make_directory ${{runner.workspace}}/Halide/build
+
+      - name: Halide: Configure CMake
+        shell: bash
+        working-directory: ${{runner.workspace}}/Halide/build
+        run: cmake -GNinja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DHALIDE_ENABLE_RTTI=ON -DWITH_APPS=OFF ..
+             cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DION_BUILD_ALL_BB=OFF -DION_BUILD_DOC=OFF -DION_BUILD_TEST=OFF -DION_BUILD_EXAMPLE=OFF -DION_BUNDLE_HALIDE=ON -DWITH_CUDA=OFF ..
+
+
+      - name: Halide: Build
+        working-directory: ${{runner.workspace}}/Halide/build
+        shell: bash
+        run: cmake --build . --target package
+
+      # Extra
+      - name: Setup OpenCV
+        uses: Dovyski/setup-opencv-action@v1
+        with:
+          opencv-version: '4.5.2'
 
       - name: Release
         uses: softprops/action-gh-release@v1
