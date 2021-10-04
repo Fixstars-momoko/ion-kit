@@ -36,7 +36,7 @@ jobs:
       # LLVM
       - uses: actions/checkout@v2
         with:
-          repository: https://github.com/llvm/llvm-project.git
+          repository: llvm/llvm-project
           ref: release/12.x
           fetch-depth: 1
 
@@ -56,7 +56,7 @@ jobs:
       # Halide
       - uses: actions/checkout@v2
         with:
-          repository: https://github.com/halide/Halide.git
+          repository: halide/Halide
           ref: v12.0.1
           fetch-depth: 1
 
