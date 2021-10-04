@@ -33,6 +33,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: llvm/llvm-project
+          path: ${{runner.workspace}}/llvm-project
           ref: release/12.x
           fetch-depth: 1
 
@@ -59,6 +60,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           repository: halide/Halide
+          path: ${{runner.workspace}}/Halide
           ref: v12.0.1
           fetch-depth: 1
 
