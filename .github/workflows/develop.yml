@@ -18,10 +18,6 @@ jobs:
     runs-on: ubuntu-18.04
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-
       - name: Get latest CMake and ninja
       - uses: lukka/get-cmake@latest
 
@@ -43,6 +39,12 @@ jobs:
       - name: create build environment
         run: cmake -E make_directory ${{runner.workspace}}/llvm-project/build
 
+      - name: Cache builds
+        uses: actions/cache@v2
+        with:
+          path: ${{runner.workspace}}/llvm-project/build
+          key: ${{ runner.os }}-llvm-project-build
+
       - name: Configure CMake
         shell: bash
         working-directory: ${{runner.workspace}}/llvm-project/build
@@ -62,6 +64,12 @@ jobs:
 
       - name: create build environment
         run: cmake -E make_directory ${{runner.workspace}}/Halide/build
+
+      - name: Cache builds
+        uses: actions/cache@v2
+        with:
+          path: ${{runner.workspace}}/Halide/build
+          key: ${{ runner.os }}-Halide-build
 
       - name: Configure CMake
         shell: bash
@@ -88,6 +96,10 @@ jobs:
             sudo cp -r ${HOME}/onnxruntime/* /usr/
 
       # ion-kit
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
       - name: create build environment
         # some projects don't allow in-source building, so create a separate build directory
         # we'll use this as our working directory for all subsequent commands
