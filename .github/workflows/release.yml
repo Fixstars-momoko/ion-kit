@@ -28,24 +28,24 @@ jobs:
             sudo apt-get install -y tree
             tree -L 3 ${{ runner.workspace }}
 
-            # - name: create build environment
-            #   run: cmake -E make_directory ${{runner.workspace}}/ion-kit/llvm-project/build
+      - name: create build environment
+        run: cmake -E make_directory ${{runner.workspace}}/ion-kit/llvm-project/build
 
-            # - name: Cache builds
-            #   uses: actions/cache@v2
-            #   with:
-            #     path: ${{runner.workspace}}/ion-kit/llvm-project/build
-            #     key: ${{ runner.os }}-llvm-project-build
+      - name: Cache builds
+        uses: actions/cache@v2
+        with:
+          path: ${{runner.workspace}}/ion-kit/llvm-project/build
+          key: ${{ runner.os }}-llvm-project-build
 
-            # - name: Configure CMake
-            #   shell: bash
-            #   working-directory: ${{runner.workspace}}/ion-kit/llvm-project/build
-            #   run: cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;Hexagon;PowerPC;AMDGPU;RISCV" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=OFF ../llvm
+      - name: Configure CMake
+        shell: bash
+        working-directory: ${{runner.workspace}}/ion-kit/llvm-project/build
+        run: cmake -GNinja -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_PROJECTS="clang;lld;clang-tools-extra" -DLLVM_TARGETS_TO_BUILD="X86;ARM;NVPTX;AArch64;Mips;Hexagon;PowerPC;AMDGPU;RISCV" -DLLVM_ENABLE_TERMINFO=OFF -DLLVM_ENABLE_ASSERTIONS=ON -DLLVM_ENABLE_EH=ON -DLLVM_ENABLE_RTTI=ON -DLLVM_BUILD_32_BITS=OFF ../llvm
 
-            # - name: Build
-            #   working-directory: ${{runner.workspace}}/ion-kit/llvm-project/build
-            #   shell: bash
-            #   run: cmake --build . --target install
+      - name: Build
+        working-directory: ${{runner.workspace}}/ion-kit/llvm-project/build
+        shell: bash
+        run: cmake --build . --target install
 
 
   release-linux:
