@@ -425,80 +425,80 @@ public:
 //     }
 // };
 
-class GrayscaleDataLoader : public ion::BuildingBlock<GrayscaleDataLoader> {
-public:
-    GeneratorParam<std::string> gc_title{"gc_title", "Data Loader / Grayscale"};
-    GeneratorParam<std::string> gc_description{"gc_description", "This loads 16-bit grayscale image from specified URL."};
-    GeneratorParam<std::string> gc_tags{"gc_tags", "input,imgproc"};
-    GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height)] }}))"};
-    GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height,url"};
-    GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
-    GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
+// class GrayscaleDataLoader : public ion::BuildingBlock<GrayscaleDataLoader> {
+// public:
+//     GeneratorParam<std::string> gc_title{"gc_title", "Data Loader / Grayscale"};
+//     GeneratorParam<std::string> gc_description{"gc_description", "This loads 16-bit grayscale image from specified URL."};
+//     GeneratorParam<std::string> gc_tags{"gc_tags", "input,imgproc"};
+//     GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height)] }}))"};
+//     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height,url"};
+//     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
+//     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
 
-    GeneratorParam<int32_t> width{"width", 0};
-    GeneratorParam<int32_t> height{"height", 0};
-    GeneratorParam<int32_t> dynamic_range{"dynamic_range", 65535};
-    GeneratorParam<std::string> url{"url", ""};
-    GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint16_t>(), 2};
+//     GeneratorParam<int32_t> width{"width", 0};
+//     GeneratorParam<int32_t> height{"height", 0};
+//     GeneratorParam<int32_t> dynamic_range{"dynamic_range", 65535};
+//     GeneratorParam<std::string> url{"url", ""};
+//     GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint16_t>(), 2};
 
-    void generate() {
-        using namespace Halide;
+//     void generate() {
+//         using namespace Halide;
 
-        const std::string session_id = sole::uuid4().str();
-        Buffer<uint8_t> session_id_buf(session_id.size() + 1);
-        session_id_buf.fill(0);
-        std::memcpy(session_id_buf.data(), session_id.c_str(), session_id.size());
+//         const std::string session_id = sole::uuid4().str();
+//         Buffer<uint8_t> session_id_buf(session_id.size() + 1);
+//         session_id_buf.fill(0);
+//         std::memcpy(session_id_buf.data(), session_id.c_str(), session_id.size());
 
-        const std::string url_str(url);
-        Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
-        url_buf.fill(0);
-        std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
+//         const std::string url_str(url);
+//         Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
+//         url_buf.fill(0);
+//         std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
 
-        std::vector<ExternFuncArgument> params = {session_id_buf, url_buf, static_cast<int32_t>(width), static_cast<int32_t>(height), static_cast<int32_t>(dynamic_range)};
-        Func grayscale_data_loader(static_cast<std::string>(gc_prefix) + "output");
-        grayscale_data_loader.define_extern("ion_bb_image_io_grayscale_data_loader", params, Halide::type_of<uint16_t>(), 2);
-        grayscale_data_loader.compute_root();
+//         std::vector<ExternFuncArgument> params = {session_id_buf, url_buf, static_cast<int32_t>(width), static_cast<int32_t>(height), static_cast<int32_t>(dynamic_range)};
+//         Func grayscale_data_loader(static_cast<std::string>(gc_prefix) + "output");
+//         grayscale_data_loader.define_extern("ion_bb_image_io_grayscale_data_loader", params, Halide::type_of<uint16_t>(), 2);
+//         grayscale_data_loader.compute_root();
 
-        output = grayscale_data_loader;
-    }
-};
+//         output = grayscale_data_loader;
+//     }
+// };
 
-class ColorDataLoader : public ion::BuildingBlock<ColorDataLoader> {
-public:
-    GeneratorParam<std::string> gc_title{"gc_title", "Data Loader / Color"};
-    GeneratorParam<std::string> gc_description{"gc_description", "This loads 8-bit/RGB/CHW image from specified URL."};
-    GeneratorParam<std::string> gc_tags{"gc_tags", "input,imgproc"};
-    GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height), 3] }}))"};
-    GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height,url"};
-    GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
-    GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
+// class ColorDataLoader : public ion::BuildingBlock<ColorDataLoader> {
+// public:
+//     GeneratorParam<std::string> gc_title{"gc_title", "Data Loader / Color"};
+//     GeneratorParam<std::string> gc_description{"gc_description", "This loads 8-bit/RGB/CHW image from specified URL."};
+//     GeneratorParam<std::string> gc_tags{"gc_tags", "input,imgproc"};
+//     GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height), 3] }}))"};
+//     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height,url"};
+//     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
+//     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
 
-    GeneratorParam<int32_t> width{"width", 0};
-    GeneratorParam<int32_t> height{"height", 0};
-    GeneratorParam<std::string> url{"url", ""};
-    GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint8_t>(), 3};
+//     GeneratorParam<int32_t> width{"width", 0};
+//     GeneratorParam<int32_t> height{"height", 0};
+//     GeneratorParam<std::string> url{"url", ""};
+//     GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint8_t>(), 3};
 
-    void generate() {
-        using namespace Halide;
+//     void generate() {
+//         using namespace Halide;
 
-        const std::string session_id = sole::uuid4().str();
-        Buffer<uint8_t> session_id_buf(session_id.size() + 1);
-        session_id_buf.fill(0);
-        std::memcpy(session_id_buf.data(), session_id.c_str(), session_id.size());
+//         const std::string session_id = sole::uuid4().str();
+//         Buffer<uint8_t> session_id_buf(session_id.size() + 1);
+//         session_id_buf.fill(0);
+//         std::memcpy(session_id_buf.data(), session_id.c_str(), session_id.size());
 
-        const std::string url_str(url);
-        Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
-        url_buf.fill(0);
-        std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
+//         const std::string url_str(url);
+//         Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
+//         url_buf.fill(0);
+//         std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
 
-        std::vector<ExternFuncArgument> params = {session_id_buf, url_buf, static_cast<int32_t>(width), static_cast<int32_t>(height)};
-        Func color_data_loader(static_cast<std::string>(gc_prefix) + "output");
-        color_data_loader.define_extern("ion_bb_image_io_color_data_loader", params, Halide::type_of<uint8_t>(), 3);
-        color_data_loader.compute_root();
+//         std::vector<ExternFuncArgument> params = {session_id_buf, url_buf, static_cast<int32_t>(width), static_cast<int32_t>(height)};
+//         Func color_data_loader(static_cast<std::string>(gc_prefix) + "output");
+//         color_data_loader.define_extern("ion_bb_image_io_color_data_loader", params, Halide::type_of<uint8_t>(), 3);
+//         color_data_loader.compute_root();
 
-        output = color_data_loader;
-    }
-};
+//         output = color_data_loader;
+//     }
+// };
 
 class ImageSaver : public ion::BuildingBlock<ImageSaver> {
 public:
@@ -784,8 +784,8 @@ ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::D435, image_io_d435);
 // ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::CameraSimulation, image_io_camera_simulation);
 // ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GUIDisplay, image_io_gui_display);
 // ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::FBDisplay, image_io_fb_display);
-ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::ColorDataLoader, image_io_color_data_loader);
-ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GrayscaleDataLoader, image_io_grayscale_data_loader);
+// ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::ColorDataLoader, image_io_color_data_loader);
+// ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GrayscaleDataLoader, image_io_grayscale_data_loader);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::ImageSaver, image_io_image_saver);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::U3VCamera1_U8x3, u3v_camera1_u8x3);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::U3VCamera1_U16x2, u3v_camera1_u16x2);
