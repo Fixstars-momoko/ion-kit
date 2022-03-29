@@ -342,88 +342,88 @@ public:
 //     }
 // };
 
-class GUIDisplay : public ion::BuildingBlock<GUIDisplay> {
-public:
-    GeneratorParam<std::string> gc_title{"gc_title", "GUI Display"};
-    GeneratorParam<std::string> gc_description{"gc_description", "This renders RGB image on GUI window."};
-    GeneratorParam<std::string> gc_tags{"gc_tags", "output,display"};
-    GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: []  }}))"};
-    GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
-    GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
-    GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
+// class GUIDisplay : public ion::BuildingBlock<GUIDisplay> {
+// public:
+//     GeneratorParam<std::string> gc_title{"gc_title", "GUI Display"};
+//     GeneratorParam<std::string> gc_description{"gc_description", "This renders RGB image on GUI window."};
+//     GeneratorParam<std::string> gc_tags{"gc_tags", "output,display"};
+//     GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: []  }}))"};
+//     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
+//     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
+//     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
 
-    GeneratorParam<int32_t> idx{"idx", 0};
-    GeneratorParam<int32_t> width{"width", 0};
-    GeneratorParam<int32_t> height{"height", 0};
-    GeneratorInput<Halide::Func> input{"input", Halide::type_of<uint8_t>(), 3};
-    GeneratorOutput<Halide::Func> output{"output", Halide::Int(32), 0};
+//     GeneratorParam<int32_t> idx{"idx", 0};
+//     GeneratorParam<int32_t> width{"width", 0};
+//     GeneratorParam<int32_t> height{"height", 0};
+//     GeneratorInput<Halide::Func> input{"input", Halide::type_of<uint8_t>(), 3};
+//     GeneratorOutput<Halide::Func> output{"output", Halide::Int(32), 0};
 
-    void generate() {
-        using namespace Halide;
+//     void generate() {
+//         using namespace Halide;
 
-        Func in(static_cast<std::string>(gc_prefix) + "input");
-        Var x, y, c;
-        in(c, x, y) = mux(c,
-                          {input(x, y, 2),
-                           input(x, y, 1),
-                           input(x, y, 0)});
-        in.compute_root();
-        if (get_target().has_gpu_feature()) {
-            Var xo, yo, xi, yi;
-            in.gpu_tile(x, y, xo, yo, xi, yi, 16, 16);
-        } else {
-            in.parallel(y);
-        }
+//         Func in(static_cast<std::string>(gc_prefix) + "input");
+//         Var x, y, c;
+//         in(c, x, y) = mux(c,
+//                           {input(x, y, 2),
+//                            input(x, y, 1),
+//                            input(x, y, 0)});
+//         in.compute_root();
+//         if (get_target().has_gpu_feature()) {
+//             Var xo, yo, xi, yi;
+//             in.gpu_tile(x, y, xo, yo, xi, yi, 16, 16);
+//         } else {
+//             in.parallel(y);
+//         }
 
-        std::vector<ExternFuncArgument> params = {in, static_cast<int>(width), static_cast<int>(height), static_cast<int>(idx)};
-        Func display(static_cast<std::string>(gc_prefix) + "output");
-        display.define_extern("ion_bb_image_io_gui_display", params, Int(32), 0);
-        display.compute_root();
+//         std::vector<ExternFuncArgument> params = {in, static_cast<int>(width), static_cast<int>(height), static_cast<int>(idx)};
+//         Func display(static_cast<std::string>(gc_prefix) + "output");
+//         display.define_extern("ion_bb_image_io_gui_display", params, Int(32), 0);
+//         display.compute_root();
 
-        output = display;
-    }
-};
+//         output = display;
+//     }
+// };
 
-class FBDisplay : public ion::BuildingBlock<FBDisplay> {
-public:
-    GeneratorParam<std::string> gc_title{"gc_title", "FBDisplay"};
-    GeneratorParam<std::string> gc_description{"gc_description", "This draws image into framebuffer display."};
-    GeneratorParam<std::string> gc_tags{"gc_tags", "output,display"};
-    GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [] }}))"};
-    GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
-    GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
-    GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
+// class FBDisplay : public ion::BuildingBlock<FBDisplay> {
+// public:
+//     GeneratorParam<std::string> gc_title{"gc_title", "FBDisplay"};
+//     GeneratorParam<std::string> gc_description{"gc_description", "This draws image into framebuffer display."};
+//     GeneratorParam<std::string> gc_tags{"gc_tags", "output,display"};
+//     GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [] }}))"};
+//     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
+//     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
+//     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
 
-    GeneratorParam<int32_t> width{"width", 0};
-    GeneratorParam<int32_t> height{"height", 0};
-    GeneratorInput<Halide::Func> input{"input", Halide::type_of<uint8_t>(), 3};
-    GeneratorOutput<Halide::Func> output{"output", Halide::Int(32), 0};
+//     GeneratorParam<int32_t> width{"width", 0};
+//     GeneratorParam<int32_t> height{"height", 0};
+//     GeneratorInput<Halide::Func> input{"input", Halide::type_of<uint8_t>(), 3};
+//     GeneratorOutput<Halide::Func> output{"output", Halide::Int(32), 0};
 
-    void generate() {
-        using namespace Halide;
+//     void generate() {
+//         using namespace Halide;
 
-        Func in(static_cast<std::string>(gc_prefix) + "input");
-        Var x, y, c;
-        in(c, x, y) = mux(c,
-                          {input(x, y, 2),
-                           input(x, y, 1),
-                           input(x, y, 0)});
-        in.compute_root();
-        if (get_target().has_gpu_feature()) {
-            Var xo, yo, xi, yi;
-            in.gpu_tile(x, y, xo, yo, xi, yi, 16, 16);
-        } else {
-            in.parallel(y);
-        }
+//         Func in(static_cast<std::string>(gc_prefix) + "input");
+//         Var x, y, c;
+//         in(c, x, y) = mux(c,
+//                           {input(x, y, 2),
+//                            input(x, y, 1),
+//                            input(x, y, 0)});
+//         in.compute_root();
+//         if (get_target().has_gpu_feature()) {
+//             Var xo, yo, xi, yi;
+//             in.gpu_tile(x, y, xo, yo, xi, yi, 16, 16);
+//         } else {
+//             in.parallel(y);
+//         }
 
-        std::vector<ExternFuncArgument> params = {cast<int32_t>(width), cast<int32_t>(height), in};
-        Func display(static_cast<std::string>(gc_prefix) + "output");
-        display.define_extern("ion_bb_image_io_fb_display", params, Halide::type_of<int32_t>(), 0);
-        display.compute_root();
+//         std::vector<ExternFuncArgument> params = {cast<int32_t>(width), cast<int32_t>(height), in};
+//         Func display(static_cast<std::string>(gc_prefix) + "output");
+//         display.define_extern("ion_bb_image_io_fb_display", params, Halide::type_of<int32_t>(), 0);
+//         display.compute_root();
 
-        output = display;
-    }
-};
+//         output = display;
+//     }
+// };
 
 class GrayscaleDataLoader : public ion::BuildingBlock<GrayscaleDataLoader> {
 public:
@@ -782,8 +782,8 @@ ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::D435, image_io_d435);
 // ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GenericV4L2Bayer, image_io_generic_v4l2_bayer);
 #endif
 // ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::CameraSimulation, image_io_camera_simulation);
-ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GUIDisplay, image_io_gui_display);
-ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::FBDisplay, image_io_fb_display);
+// ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GUIDisplay, image_io_gui_display);
+// ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::FBDisplay, image_io_fb_display);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::ColorDataLoader, image_io_color_data_loader);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GrayscaleDataLoader, image_io_grayscale_data_loader);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::ImageSaver, image_io_image_saver);
