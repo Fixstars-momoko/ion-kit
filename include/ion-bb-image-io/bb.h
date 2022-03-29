@@ -60,101 +60,101 @@ const int BayerMap::bayer_map[4][4]{
     {1, 2, 0, 1}   // GBRG
 };
 
-uint32_t make_pixel_format(BayerMap::Pattern bayer_pattern, int32_t bit_width)
-{
-    uint32_t pix_format;
-    switch (bit_width * 10 + static_cast<int32_t>(static_cast<BayerMap::Pattern>(bayer_pattern))) {
-    case 80:  // RGGB 8bit
-        pix_format = V4L2_PIX_FMT_SRGGB8;
-        break;
-    case 81:  // BGGR 8bit
-        pix_format = V4L2_PIX_FMT_SBGGR8;
-        break;
-    case 82:  // GRBG 8bit
-        pix_format = V4L2_PIX_FMT_SGRBG8;
-        break;
-    case 83:  // GBRG 8bit
-        pix_format = V4L2_PIX_FMT_SGBRG8;
-        break;
-    case 100:  // RGGB 10bit
-        pix_format = V4L2_PIX_FMT_SRGGB10;
-        break;
-    case 101:  // BGGR 10bit
-        pix_format = V4L2_PIX_FMT_SBGGR10;
-        break;
-    case 102:  // GRBG 10bit
-        pix_format = V4L2_PIX_FMT_SGRBG10;
-        break;
-    case 103:  // GBRG 10bit
-        pix_format = V4L2_PIX_FMT_SGBRG10;
-        break;
-    case 120:  // RGGB 12bit
-        pix_format = V4L2_PIX_FMT_SRGGB12;
-        break;
-    case 121:  // BGGR 12bit
-        pix_format = V4L2_PIX_FMT_SBGGR12;
-        break;
-    case 122:  // GRBG 12bit
-        pix_format = V4L2_PIX_FMT_SGRBG12;
-        break;
-    case 123:  // GBRG 12bit
-        pix_format = V4L2_PIX_FMT_SGBRG12;
-        break;
-    default:
-        throw std::runtime_error("Unsupported pixel_format combination");
-    }
+// uint32_t make_pixel_format(BayerMap::Pattern bayer_pattern, int32_t bit_width)
+// {
+//     uint32_t pix_format;
+//     switch (bit_width * 10 + static_cast<int32_t>(static_cast<BayerMap::Pattern>(bayer_pattern))) {
+//     case 80:  // RGGB 8bit
+//         pix_format = V4L2_PIX_FMT_SRGGB8;
+//         break;
+//     case 81:  // BGGR 8bit
+//         pix_format = V4L2_PIX_FMT_SBGGR8;
+//         break;
+//     case 82:  // GRBG 8bit
+//         pix_format = V4L2_PIX_FMT_SGRBG8;
+//         break;
+//     case 83:  // GBRG 8bit
+//         pix_format = V4L2_PIX_FMT_SGBRG8;
+//         break;
+//     case 100:  // RGGB 10bit
+//         pix_format = V4L2_PIX_FMT_SRGGB10;
+//         break;
+//     case 101:  // BGGR 10bit
+//         pix_format = V4L2_PIX_FMT_SBGGR10;
+//         break;
+//     case 102:  // GRBG 10bit
+//         pix_format = V4L2_PIX_FMT_SGRBG10;
+//         break;
+//     case 103:  // GBRG 10bit
+//         pix_format = V4L2_PIX_FMT_SGBRG10;
+//         break;
+//     case 120:  // RGGB 12bit
+//         pix_format = V4L2_PIX_FMT_SRGGB12;
+//         break;
+//     case 121:  // BGGR 12bit
+//         pix_format = V4L2_PIX_FMT_SBGGR12;
+//         break;
+//     case 122:  // GRBG 12bit
+//         pix_format = V4L2_PIX_FMT_SGRBG12;
+//         break;
+//     case 123:  // GBRG 12bit
+//         pix_format = V4L2_PIX_FMT_SGBRG12;
+//         break;
+//     default:
+//         throw std::runtime_error("Unsupported pixel_format combination");
+//     }
 
-    return pix_format;
-}
+//     return pix_format;
+// }
 
 int instance_id = 0;
 
-class IMX219 : public ion::BuildingBlock<IMX219> {
-public:
-    GeneratorParam<std::string> gc_title{"gc_title", "IMX219"};
-    GeneratorParam<std::string> gc_description{"gc_description", "This captures IMX219 image."};
-    GeneratorParam<std::string> gc_tags{"gc_tags", "input,sensor"};
-    GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height)] }}))"};
-    GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
-    GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
-    GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
+// class IMX219 : public ion::BuildingBlock<IMX219> {
+// public:
+//     GeneratorParam<std::string> gc_title{"gc_title", "IMX219"};
+//     GeneratorParam<std::string> gc_description{"gc_description", "This captures IMX219 image."};
+//     GeneratorParam<std::string> gc_tags{"gc_tags", "input,sensor"};
+//     GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height)] }}))"};
+//     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
+//     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
+//     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
 
-    GeneratorParam<int32_t> fps{"fps", 24};
-    GeneratorParam<int32_t> width{"width", 3264};
-    GeneratorParam<int32_t> height{"height", 2464};
-    GeneratorParam<int32_t> index{"index", 0};
-    GeneratorParam<std::string> url{"url", ""};
-    GeneratorParam<bool> force_sim_mode{"force_sim_mode", false};
+//     GeneratorParam<int32_t> fps{"fps", 24};
+//     GeneratorParam<int32_t> width{"width", 3264};
+//     GeneratorParam<int32_t> height{"height", 2464};
+//     GeneratorParam<int32_t> index{"index", 0};
+//     GeneratorParam<std::string> url{"url", ""};
+//     GeneratorParam<bool> force_sim_mode{"force_sim_mode", false};
 
-    GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint16_t>(), 2};
+//     GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint16_t>(), 2};
 
-    void generate() {
-        using namespace Halide;
-        std::string url_str = url;
-        Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
-        url_buf.fill(0);
-        std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
+//     void generate() {
+//         using namespace Halide;
+//         std::string url_str = url;
+//         Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
+//         url_buf.fill(0);
+//         std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
 
-        std::vector<ExternFuncArgument> params = {
-            instance_id++,
-            cast<int32_t>(index),
-            cast<int32_t>(fps),
-            cast<int32_t>(width),
-            cast<int32_t>(height),
-            cast<uint32_t>(Expr(V4L2_PIX_FMT_SRGGB10)),
-            cast<uint32_t>(force_sim_mode),
-            url_buf,
-            0.4f, 0.5f, 0.3125f,
-            0.0625f,
-            10, 6
-        };
-        Func v4l2_imx219(static_cast<std::string>(gc_prefix) + "output");
-        v4l2_imx219.define_extern("ion_bb_image_io_v4l2", params, type_of<uint16_t>(), 2);
-        v4l2_imx219.compute_root();
+//         std::vector<ExternFuncArgument> params = {
+//             instance_id++,
+//             cast<int32_t>(index),
+//             cast<int32_t>(fps),
+//             cast<int32_t>(width),
+//             cast<int32_t>(height),
+//             cast<uint32_t>(Expr(V4L2_PIX_FMT_SRGGB10)),
+//             cast<uint32_t>(force_sim_mode),
+//             url_buf,
+//             0.4f, 0.5f, 0.3125f,
+//             0.0625f,
+//             10, 6
+//         };
+//         Func v4l2_imx219(static_cast<std::string>(gc_prefix) + "output");
+//         v4l2_imx219.define_extern("ion_bb_image_io_v4l2", params, type_of<uint16_t>(), 2);
+//         v4l2_imx219.compute_root();
 
-        output = v4l2_imx219;
-    }
-};
+//         output = v4l2_imx219;
+//     }
+// };
 
 class D435 : public ion::BuildingBlock<D435> {
 public:
@@ -191,156 +191,156 @@ public:
     }
 };
 
-class Camera : public ion::BuildingBlock<Camera> {
-public:
-    GeneratorParam<std::string> gc_title{"gc_title", "USBCamera"};
-    GeneratorParam<std::string> gc_description{"gc_description", "This captures USB camera image."};
-    GeneratorParam<std::string> gc_tags{"gc_tags", "input,sensor"};
-    GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height), 3] }}))"};
-    GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
-    GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
-    GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
+// class Camera : public ion::BuildingBlock<Camera> {
+// public:
+//     GeneratorParam<std::string> gc_title{"gc_title", "USBCamera"};
+//     GeneratorParam<std::string> gc_description{"gc_description", "This captures USB camera image."};
+//     GeneratorParam<std::string> gc_tags{"gc_tags", "input,sensor"};
+//     GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height), 3] }}))"};
+//     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
+//     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
+//     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
 
-    GeneratorParam<int32_t> fps{"fps", 30};
-    GeneratorParam<int32_t> width{"width", 0};
-    GeneratorParam<int32_t> height{"height", 0};
-    GeneratorParam<int32_t> index{"index", 0};
-    GeneratorParam<std::string> url{"url", ""};
+//     GeneratorParam<int32_t> fps{"fps", 30};
+//     GeneratorParam<int32_t> width{"width", 0};
+//     GeneratorParam<int32_t> height{"height", 0};
+//     GeneratorParam<int32_t> index{"index", 0};
+//     GeneratorParam<std::string> url{"url", ""};
 
-    GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint8_t>(), 3};
+//     GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint8_t>(), 3};
 
-    void generate() {
-        using namespace Halide;
-        std::string url_str = url;
-        Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
-        url_buf.fill(0);
-        std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
+//     void generate() {
+//         using namespace Halide;
+//         std::string url_str = url;
+//         Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
+//         url_buf.fill(0);
+//         std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
 
-        std::vector<ExternFuncArgument> params = {instance_id++, cast<int32_t>(index), cast<int32_t>(fps), cast<int32_t>(width), cast<int32_t>(height), url_buf};
-        Func camera(static_cast<std::string>(gc_prefix) + "camera");
-        camera.define_extern("ion_bb_image_io_camera", params, Halide::type_of<uint8_t>(), 2);
-        camera.compute_root();
+//         std::vector<ExternFuncArgument> params = {instance_id++, cast<int32_t>(index), cast<int32_t>(fps), cast<int32_t>(width), cast<int32_t>(height), url_buf};
+//         Func camera(static_cast<std::string>(gc_prefix) + "camera");
+//         camera.define_extern("ion_bb_image_io_camera", params, Halide::type_of<uint8_t>(), 2);
+//         camera.compute_root();
 
-        Func camera_ = BoundaryConditions::repeat_edge(camera, {{0, 2 * width}, {0, height}});
+//         Func camera_ = BoundaryConditions::repeat_edge(camera, {{0, 2 * width}, {0, height}});
 
-        Var c, x, y;
+//         Var c, x, y;
 
-        Expr yv = cast<float>(camera_(2 * x, y));
-        Expr uv = cast<float>(camera_(select((x & 1) == 0, 2 * x + 1, 2 * x - 1), y));
-        Expr vv = cast<float>(camera_(select((x & 1) == 0, 2 * x + 3, 2 * x + 1), y));
+//         Expr yv = cast<float>(camera_(2 * x, y));
+//         Expr uv = cast<float>(camera_(select((x & 1) == 0, 2 * x + 1, 2 * x - 1), y));
+//         Expr vv = cast<float>(camera_(select((x & 1) == 0, 2 * x + 3, 2 * x + 1), y));
 
-        Expr f128 = cast<float>(128);
+//         Expr f128 = cast<float>(128);
 
-        Expr r = saturating_cast<uint8_t>(yv + cast<float>(1.403f) * (vv - f128));
-        Expr g = saturating_cast<uint8_t>(yv - cast<float>(0.344f) * (uv - f128) - (cast<float>(0.714f) * (vv - f128)));
-        Expr b = saturating_cast<uint8_t>(yv + cast<float>(1.773f) * (uv - f128));
+//         Expr r = saturating_cast<uint8_t>(yv + cast<float>(1.403f) * (vv - f128));
+//         Expr g = saturating_cast<uint8_t>(yv - cast<float>(0.344f) * (uv - f128) - (cast<float>(0.714f) * (vv - f128)));
+//         Expr b = saturating_cast<uint8_t>(yv + cast<float>(1.773f) * (uv - f128));
 
-        Func f(static_cast<std::string>(gc_prefix) + "output");
-        f(x, y, c) = mux(c, {r, g, b});
+//         Func f(static_cast<std::string>(gc_prefix) + "output");
+//         f(x, y, c) = mux(c, {r, g, b});
 
-        output = f;
-    }
-};
+//         output = f;
+//     }
+// };
 
-class GenericV4L2Bayer : public ion::BuildingBlock<GenericV4L2Bayer> {
-public:
-    GeneratorParam<std::string> gc_title{"gc_title", "GenericV4L2Bayer"};
-    GeneratorParam<std::string> gc_description{"gc_description", "This captures Bayer image from V4L2."};
-    GeneratorParam<std::string> gc_tags{"gc_tags", "input,sensor"};
-    GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height)] }}))"};
-    GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
-    GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
-    GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
+// class GenericV4L2Bayer : public ion::BuildingBlock<GenericV4L2Bayer> {
+// public:
+//     GeneratorParam<std::string> gc_title{"gc_title", "GenericV4L2Bayer"};
+//     GeneratorParam<std::string> gc_description{"gc_description", "This captures Bayer image from V4L2."};
+//     GeneratorParam<std::string> gc_tags{"gc_tags", "input,sensor"};
+//     GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height)] }}))"};
+//     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height"};
+//     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
+//     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
 
-    GeneratorParam<int32_t> index{"index", 0};
-    GeneratorParam<std::string> url{"url", ""};
-    GeneratorParam<int32_t> fps{"fps", 20};
-    GeneratorParam<int32_t> width{"width", 0};
-    GeneratorParam<int32_t> height{"height", 0};
-    GeneratorParam<int32_t> bit_width{"bit_width", 10};
-    GeneratorParam<BayerMap::Pattern> bayer_pattern{"bayer_pattern", BayerMap::Pattern::RGGB, BayerMap::enum_map};
-    GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint16_t>(), 2};
+//     GeneratorParam<int32_t> index{"index", 0};
+//     GeneratorParam<std::string> url{"url", ""};
+//     GeneratorParam<int32_t> fps{"fps", 20};
+//     GeneratorParam<int32_t> width{"width", 0};
+//     GeneratorParam<int32_t> height{"height", 0};
+//     GeneratorParam<int32_t> bit_width{"bit_width", 10};
+//     GeneratorParam<BayerMap::Pattern> bayer_pattern{"bayer_pattern", BayerMap::Pattern::RGGB, BayerMap::enum_map};
+//     GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint16_t>(), 2};
 
-    void generate() {
-        using namespace Halide;
+//     void generate() {
+//         using namespace Halide;
 
-        std::string url_str = url;
-        Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
-        url_buf.fill(0);
-        std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
+//         std::string url_str = url;
+//         Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
+//         url_buf.fill(0);
+//         std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
 
-        std::vector<ExternFuncArgument> params = {
-            instance_id++,
-            cast<int32_t>(index),
-            cast<int32_t>(fps),
-            cast<int32_t>(width),
-            cast<int32_t>(height),
-            Expr(make_pixel_format(bayer_pattern, bit_width)),
-            cast<uint32_t>(0),
-            url_buf,
-            1.f, 1.f, 1.f,
-            0.f,
-            cast<int32_t>(bit_width), 16 - bit_width
-        };
-        Func v4l2(static_cast<std::string>(gc_prefix) + "output");
-        v4l2.define_extern("ion_bb_image_io_v4l2", params, type_of<uint16_t>(), 2);
-        v4l2.compute_root();
+//         std::vector<ExternFuncArgument> params = {
+//             instance_id++,
+//             cast<int32_t>(index),
+//             cast<int32_t>(fps),
+//             cast<int32_t>(width),
+//             cast<int32_t>(height),
+//             Expr(make_pixel_format(bayer_pattern, bit_width)),
+//             cast<uint32_t>(0),
+//             url_buf,
+//             1.f, 1.f, 1.f,
+//             0.f,
+//             cast<int32_t>(bit_width), 16 - bit_width
+//         };
+//         Func v4l2(static_cast<std::string>(gc_prefix) + "output");
+//         v4l2.define_extern("ion_bb_image_io_v4l2", params, type_of<uint16_t>(), 2);
+//         v4l2.compute_root();
 
-        output = v4l2;
-    }
-};
+//         output = v4l2;
+//     }
+// };
 
-class CameraSimulation : public ion::BuildingBlock<CameraSimulation> {
-public:
-    GeneratorParam<std::string> gc_title{"gc_title", "CameraSimulation"};
-    GeneratorParam<std::string> gc_description{"gc_description", "This simulates Bayer image."};
-    GeneratorParam<std::string> gc_tags{"gc_tags", "input,sensor"};
-    GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height)] }}))"};
-    GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height,url"};
-    GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
-    GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
+// class CameraSimulation : public ion::BuildingBlock<CameraSimulation> {
+// public:
+//     GeneratorParam<std::string> gc_title{"gc_title", "CameraSimulation"};
+//     GeneratorParam<std::string> gc_description{"gc_description", "This simulates Bayer image."};
+//     GeneratorParam<std::string> gc_tags{"gc_tags", "input,sensor"};
+//     GeneratorParam<std::string> gc_inference{"gc_inference", R"((function(v){ return { output: [parseInt(v.width), parseInt(v.height)] }}))"};
+//     GeneratorParam<std::string> gc_mandatory{"gc_mandatory", "width,height,url"};
+//     GeneratorParam<std::string> gc_strategy{"gc_strategy", "self"};
+//     GeneratorParam<std::string> gc_prefix{"gc_prefix", ""};
 
-    GeneratorParam<int32_t> fps{"fps", 30};
-    GeneratorParam<int32_t> width{"width", 0};
-    GeneratorParam<int32_t> height{"height", 0};
-    GeneratorParam<std::string> url{"url", ""};
-    GeneratorParam<BayerMap::Pattern> bayer_pattern{"bayer_pattern", BayerMap::Pattern::RGGB, BayerMap::enum_map};
-    GeneratorParam<int32_t> bit_width{"bit_width", 10};
-    GeneratorParam<int32_t> bit_shift{"bit_shift", 0};
-    GeneratorParam<float> gain_r{"gain_r", 1.f};
-    GeneratorParam<float> gain_g{"gain_g", 1.f};
-    GeneratorParam<float> gain_b{"gain_b", 1.f};
-    GeneratorParam<float> offset{"offset", 0.f};
+//     GeneratorParam<int32_t> fps{"fps", 30};
+//     GeneratorParam<int32_t> width{"width", 0};
+//     GeneratorParam<int32_t> height{"height", 0};
+//     GeneratorParam<std::string> url{"url", ""};
+//     GeneratorParam<BayerMap::Pattern> bayer_pattern{"bayer_pattern", BayerMap::Pattern::RGGB, BayerMap::enum_map};
+//     GeneratorParam<int32_t> bit_width{"bit_width", 10};
+//     GeneratorParam<int32_t> bit_shift{"bit_shift", 0};
+//     GeneratorParam<float> gain_r{"gain_r", 1.f};
+//     GeneratorParam<float> gain_g{"gain_g", 1.f};
+//     GeneratorParam<float> gain_b{"gain_b", 1.f};
+//     GeneratorParam<float> offset{"offset", 0.f};
 
-    GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint16_t>(), 2};
+//     GeneratorOutput<Halide::Func> output{"output", Halide::type_of<uint16_t>(), 2};
 
-    void generate() {
-        using namespace Halide;
-        std::string url_str = url;
-        Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
-        url_buf.fill(0);
-        std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
+//     void generate() {
+//         using namespace Halide;
+//         std::string url_str = url;
+//         Halide::Buffer<uint8_t> url_buf(url_str.size() + 1);
+//         url_buf.fill(0);
+//         std::memcpy(url_buf.data(), url_str.c_str(), url_str.size());
 
-        std::vector<ExternFuncArgument> params = {
-            instance_id++,
-            0,
-            cast<int32_t>(fps),
-            cast<int32_t>(width),
-            cast<int32_t>(height),
-            Expr(make_pixel_format(bayer_pattern, bit_width)),
-            cast<uint32_t>(1),
-            url_buf,
-            cast<float>(gain_r), cast<float>(gain_g), cast<float>(gain_b),
-            cast<float>(offset),
-            cast<int32_t>(bit_width), cast<int32_t>(bit_shift)
-        };
-        Func camera(static_cast<std::string>(gc_prefix) + "output");
-        camera.define_extern("ion_bb_image_io_v4l2", params, type_of<uint16_t>(), 2);
-        camera.compute_root();
+//         std::vector<ExternFuncArgument> params = {
+//             instance_id++,
+//             0,
+//             cast<int32_t>(fps),
+//             cast<int32_t>(width),
+//             cast<int32_t>(height),
+//             Expr(make_pixel_format(bayer_pattern, bit_width)),
+//             cast<uint32_t>(1),
+//             url_buf,
+//             cast<float>(gain_r), cast<float>(gain_g), cast<float>(gain_b),
+//             cast<float>(offset),
+//             cast<int32_t>(bit_width), cast<int32_t>(bit_shift)
+//         };
+//         Func camera(static_cast<std::string>(gc_prefix) + "output");
+//         camera.define_extern("ion_bb_image_io_v4l2", params, type_of<uint16_t>(), 2);
+//         camera.compute_root();
 
-        output = camera;
-    }
-};
+//         output = camera;
+//     }
+// };
 
 class GUIDisplay : public ion::BuildingBlock<GUIDisplay> {
 public:
@@ -776,12 +776,12 @@ public:
 }  // namespace ion
 
 #ifndef _WIN32
-ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::IMX219, image_io_imx219);
+// ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::IMX219, image_io_imx219);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::D435, image_io_d435);
-ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::Camera, image_io_camera);
-ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GenericV4L2Bayer, image_io_generic_v4l2_bayer);
+// ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::Camera, image_io_camera);
+// ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GenericV4L2Bayer, image_io_generic_v4l2_bayer);
 #endif
-ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::CameraSimulation, image_io_camera_simulation);
+// ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::CameraSimulation, image_io_camera_simulation);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::GUIDisplay, image_io_gui_display);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::FBDisplay, image_io_fb_display);
 ION_REGISTER_BUILDING_BLOCK(ion::bb::image_io::ColorDataLoader, image_io_color_data_loader);
