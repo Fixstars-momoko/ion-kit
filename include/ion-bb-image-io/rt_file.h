@@ -98,30 +98,30 @@
 // }
 // ION_REGISTER_EXTERN(ion_bb_image_io_grayscale_data_loader);
 
-extern "C" int ION_EXPORT ion_bb_image_io_saver(halide_buffer_t *in, int32_t in_extent_1, int32_t in_extent_2, halide_buffer_t *path, halide_buffer_t *out) {
-    try {
-        if (in->is_bounds_query()) {
-            in->dim[0].min = 0;
-            in->dim[0].extent = 3;
-            in->dim[1].min = 0;
-            in->dim[1].extent = in_extent_1;
-            in->dim[2].min = 0;
-            in->dim[2].extent = in_extent_2;
-        } else {
-            cv::Mat img(std::vector<int>{in_extent_2, in_extent_1}, CV_8UC3, in->host);
-            cv::imwrite(reinterpret_cast<const char *>(path->host), img);
-        }
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        return -1;
-    } catch (...) {
-        std::cerr << "Unknown error" << std::endl;
-        return -1;
-    }
+// extern "C" int ION_EXPORT ion_bb_image_io_saver(halide_buffer_t *in, int32_t in_extent_1, int32_t in_extent_2, halide_buffer_t *path, halide_buffer_t *out) {
+//     try {
+//         if (in->is_bounds_query()) {
+//             in->dim[0].min = 0;
+//             in->dim[0].extent = 3;
+//             in->dim[1].min = 0;
+//             in->dim[1].extent = in_extent_1;
+//             in->dim[2].min = 0;
+//             in->dim[2].extent = in_extent_2;
+//         } else {
+//             cv::Mat img(std::vector<int>{in_extent_2, in_extent_1}, CV_8UC3, in->host);
+//             cv::imwrite(reinterpret_cast<const char *>(path->host), img);
+//         }
+//     } catch (const std::exception &e) {
+//         std::cerr << e.what() << std::endl;
+//         return -1;
+//     } catch (...) {
+//         std::cerr << "Unknown error" << std::endl;
+//         return -1;
+//     }
 
-    return 0;
-}
-ION_REGISTER_EXTERN(ion_bb_image_io_saver);
+//     return 0;
+// }
+// ION_REGISTER_EXTERN(ion_bb_image_io_saver);
 
 namespace {
 

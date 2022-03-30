@@ -136,43 +136,43 @@ std::tuple<std::string, std::string> parse_url(const std::string &url) {
     return std::tuple<std::string, std::string>(host_name, path_name);
 }
 
-cv::Mat get_image(const std::string &url) {
-    if (url.empty()) {
-        return {};
-    }
+// cv::Mat get_image(const std::string &url) {
+//     if (url.empty()) {
+//         return {};
+//     }
 
-    std::string host_name;
-    std::string path_name;
-    std::tie(host_name, path_name) = parse_url(url);
+//     std::string host_name;
+//     std::string path_name;
+//     std::tie(host_name, path_name) = parse_url(url);
 
-    cv::Mat img;
-    bool img_loaded = false;
-    if (host_name.empty() || path_name.empty()) {
-        // fallback to local file
-        img = cv::imread(url);
-        if (!img.empty()) {
-            img_loaded = true;
-        }
-    } else {
-        httplib::Client cli(host_name.c_str());
-        cli.set_follow_location(true);
-        auto res = cli.Get(path_name.c_str());
-        if (res && res->status == 200) {
-            std::vector<char> data(res->body.size());
-            std::memcpy(data.data(), res->body.c_str(), res->body.size());
-            img = cv::imdecode(cv::InputArray(data), cv::IMREAD_COLOR);
-            if (!img.empty()) {
-                img_loaded = true;
-            }
-        }
-    }
+//     cv::Mat img;
+//     bool img_loaded = false;
+//     if (host_name.empty() || path_name.empty()) {
+//         // fallback to local file
+//         img = cv::imread(url);
+//         if (!img.empty()) {
+//             img_loaded = true;
+//         }
+//     } else {
+//         httplib::Client cli(host_name.c_str());
+//         cli.set_follow_location(true);
+//         auto res = cli.Get(path_name.c_str());
+//         if (res && res->status == 200) {
+//             std::vector<char> data(res->body.size());
+//             std::memcpy(data.data(), res->body.c_str(), res->body.size());
+//             img = cv::imdecode(cv::InputArray(data), cv::IMREAD_COLOR);
+//             if (!img.empty()) {
+//                 img_loaded = true;
+//             }
+//         }
+//     }
 
-    if (img_loaded) {
-        return img;
-    } else {
-        return {};
-    }
-}
+//     if (img_loaded) {
+//         return img;
+//     } else {
+//         return {};
+//     }
+// }
 
 // class ImageSequence {
 
