@@ -195,7 +195,7 @@ class ImageSequence {
         std::string host_name;
         std::string path_name;
         std::tie(host_name, path_name) = ion::bb::image_io::parse_url(url);
-git 
+ 
         std::vector<unsigned char> data;
         if (host_name.empty() || path_name.empty()) {
             // fallback to local file
