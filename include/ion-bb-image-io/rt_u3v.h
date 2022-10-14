@@ -105,7 +105,7 @@ class U3V {
     using arv_buffer_get_status_t = ArvBufferStatus(*)(ArvBuffer*);
     using arv_buffer_get_payload_type_t = ArvBufferPayloadType(*)(ArvBuffer*);
     using arv_buffer_get_data_t = void*(*)(ArvBuffer*, size_t*);
-    using arv_buffer_get_timestamp_t = uint64(*)(ArvBuffer*);
+    using arv_buffer_get_timestamp_t = uint64_t(*)(ArvBuffer*);
     using arv_device_get_feature_t = ArvGcNode*(*)(ArvDevice*, const char*);
 
     using arv_shutdown_t = void(*)(void);
