@@ -86,7 +86,7 @@ class U3V {
 
     using arv_device_set_string_feature_value_t = void(*)(ArvDevice*, const char*, const char*, GError**);
     using arv_device_set_float_feature_value_t = void(*)(ArvDevice*, const char*, float, GError**);
-    using arv_device_set_integer_feature_value_t = void(*)(ArvDevice*, const char*, int, GError**);
+    using arv_device_set_integer_feature_value_t = void(*)(ArvDevice*, const char*, int64_t, GError**);
 
     using arv_device_get_string_feature_value_t = const char *(*)(ArvDevice*, const char*, GError**);
     using arv_device_get_integer_feature_value_t = int(*)(ArvDevice*, const char*, GError**);
