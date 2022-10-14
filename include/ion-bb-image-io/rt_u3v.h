@@ -189,7 +189,7 @@ class U3V {
             if (bufs[i] == nullptr){
                 throw ::std::runtime_error("buffer is null");
             }
-            devices_[i].frame_count_ = static_cast<uint64>(arv_buffer_get_timestamp(bufs[i]) & 0x00000000FFFFFFFF);
+            devices_[i].frame_count_ = static_cast<uint64_t>(arv_buffer_get_timestamp(bufs[i]) & 0x00000000FFFFFFFF);
         }
 
         if (frame_sync_) {
@@ -221,7 +221,7 @@ class U3V {
                         if (bufs[i] == nullptr){
                             throw ::std::runtime_error("buffer is null");
                         }
-                        devices_[i].frame_count_ = static_cast<uint64>(arv_buffer_get_timestamp(bufs[i]) & 0x00000000FFFFFFFF);
+                        devices_[i].frame_count_ = static_cast<uint64_t>(arv_buffer_get_timestamp(bufs[i]) & 0x00000000FFFFFFFF);
                     }
                 }
             }
