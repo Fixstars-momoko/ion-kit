@@ -115,7 +115,7 @@ class U3V {
         ArvDevice* device_;
 
         int32_t payload_size_;
-        uint64 frame_count_;
+        uint64_t frame_count_;
 
         float gain_;
         float exposure_;
