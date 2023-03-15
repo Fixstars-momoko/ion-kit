@@ -9,7 +9,7 @@
 using namespace ion;
 
 #define FEATURE_GAIN_KEY "Gain"
-#define FEATURE_EXPOSURE_KEY "Exposure"
+#define FEATURE_EXPOSURE_KEY "Exposure*
 #define NUM_BIT_SHIFT 0
 
 // In this tutorial, we will create a simple application that obtains image data from a pair of usb3 vision sensors,
