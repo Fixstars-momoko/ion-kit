@@ -111,6 +111,7 @@ class U3V {
     using arv_device_get_feature_t = ArvGcNode*(*)(ArvDevice*, const char*);
 
     using arv_buffer_has_gendc_t = bool*(*)(ArvBuffer*);
+    using arv_buffer_get_gendc_descriptor_t = void*(*)(ArvBuffer*, size_t*);
 
     using arv_shutdown_t = void(*)(void);
 
@@ -198,6 +199,17 @@ class U3V {
         return devices_[0].frame_count_;
     }
 
+    int32_t get_frame_count_from_genDC_descriptor(ArvBuffer * buf){
+        int32_t offset = 184 + 56;//tentatively fixed
+
+        int32_t frame_count = 0;;
+
+        int64_t container_dataoffset;
+        memcpy (&frame_count, ((char *) arv_buffer_get_data(buf, nullptr) + offset), 4);
+        std::cout << frame_count << std::endl;
+        return frame_count;
+    }
+
     void get(std::vector<void *>& outs) {
 
         int32_t num_device = devices_.size();
@@ -209,7 +221,7 @@ class U3V {
             if (bufs[i] == nullptr){
                 throw ::std::runtime_error("buffer is null");
             }
-            devices_[i].frame_count_ = static_cast<uint64_t>(arv_buffer_get_timestamp(bufs[i]) & 0x00000000FFFFFFFF);
+            devices_[i].frame_count_ = get_frame_count_from_genDC_descriptor(bufs[i]);
         }
 
         if (realtime_diaplay_mode_){
@@ -229,7 +241,7 @@ class U3V {
                         if (bufs[i] == nullptr){
                             throw ::std::runtime_error("buffer is null");
                         }
-                        devices_[i].frame_count_ = static_cast<uint64_t>(arv_buffer_get_timestamp(bufs[i]) & 0x00000000FFFFFFFF);
+                        devices_[i].frame_count_ = get_frame_count_from_genDC_descriptor(bufs[i]);
                     }
                 }
             }
@@ -264,7 +276,7 @@ class U3V {
                         if (bufs[i] == nullptr){
                             throw ::std::runtime_error("buffer is null");
                         }
-                        devices_[i].frame_count_ = static_cast<uint64_t>(arv_buffer_get_timestamp(bufs[i]) & 0x00000000FFFFFFFF);
+                        devices_[i].frame_count_ = get_frame_count_from_genDC_descriptor(bufs[i]);
                     }
                 }
             }
@@ -432,7 +444,8 @@ class U3V {
         GET_SYMBOL(arv_device_get_feature, "arv_device_get_feature");
 
         GET_SYMBOL(arv_buffer_has_gendc, "arv_buffer_has_gendc");
-
+        GET_SYMBOL(arv_buffer_get_gendc_descriptor, "arv_buffer_get_gendc_descriptor");
+        
         GET_SYMBOL(arv_shutdown, "arv_shutdown");
 
         #undef GET_SYMBOL
@@ -529,6 +542,7 @@ class U3V {
     arv_device_get_feature_t arv_device_get_feature;
 
     arv_buffer_has_gendc_t arv_buffer_has_gendc;
+    arv_buffer_get_gendc_descriptor_t arv_buffer_get_gendc_descriptor;
 
     arv_shutdown_t arv_shutdown;
 
