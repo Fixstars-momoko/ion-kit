@@ -93,6 +93,7 @@ class U3V {
     using arv_device_get_float_feature_value_t = float(*)(ArvDevice*, const char*, GError**);
 
     using arv_device_get_integer_feature_bounds_t = void(*)(ArvDevice*, const char*, int64_t*, int64_t*, GError**);
+    using arv_device_get_float_feature_bounds_t = void(*)(ArvDevice*, const char*, double*, double*, GError**);
 
     using arv_device_create_stream_t = ArvStream*(*)(ArvDevice*, ArvStreamCallback*, void*, GError**);
 
@@ -108,6 +109,8 @@ class U3V {
     using arv_buffer_get_data_t = void*(*)(ArvBuffer*, size_t*);
     using arv_buffer_get_timestamp_t = uint64_t(*)(ArvBuffer*);
     using arv_device_get_feature_t = ArvGcNode*(*)(ArvDevice*, const char*);
+
+    using arv_buffer_has_gendc_t = bool*(*)(ArvBuffer*);
 
     using arv_shutdown_t = void(*)(void);
 
@@ -166,10 +169,10 @@ class U3V {
         instance_.reset(nullptr);
     }
 
-    void SetGain(int32_t sensor_idx, const std::string key, int32_t v) {
+    void SetGain(int32_t sensor_idx, const std::string key, double v) {
         if (sensor_idx < num_sensor_ ){
             if(devices_[sensor_idx].gain_ != v){
-                err_ =  Set(devices_[sensor_idx].device_, key.c_str(), static_cast<int64_t>(v));
+                err_ =  Set(devices_[sensor_idx].device_, key.c_str(), v);
                 devices_[sensor_idx].gain_ = v;
             }
             return;
@@ -178,10 +181,10 @@ class U3V {
         }
     }
 
-    void SetExposure(int32_t sensor_idx, const std::string key, int32_t v) {
+    void SetExposure(int32_t sensor_idx, const std::string key, double v) {
         if (sensor_idx < num_sensor_ ){
             if(devices_[sensor_idx].exposure_ != v){
-                err_ = Set(devices_[sensor_idx].device_, key.c_str(), static_cast<int64_t>(v));
+                err_ = Set(devices_[sensor_idx].device_, key.c_str(), v);
                 devices_[sensor_idx].exposure_ = v;
             }
             return;
@@ -413,6 +416,8 @@ class U3V {
         GET_SYMBOL(arv_device_get_integer_feature_value, "arv_device_get_integer_feature_value");
         GET_SYMBOL(arv_device_get_float_feature_value, "arv_device_get_float_feature_value");
         GET_SYMBOL(arv_device_get_integer_feature_bounds, "arv_device_get_integer_feature_bounds");
+        GET_SYMBOL(arv_device_get_float_feature_bounds, "arv_device_get_float_feature_bounds");
+
         GET_SYMBOL(arv_device_create_stream, "arv_device_create_stream");
         GET_SYMBOL(arv_buffer_new_allocate, "arv_buffer_new_allocate");
         GET_SYMBOL(arv_stream_push_buffer, "arv_stream_push_buffer");
@@ -425,6 +430,8 @@ class U3V {
         GET_SYMBOL(arv_buffer_get_data, "arv_buffer_get_data");
         GET_SYMBOL(arv_buffer_get_timestamp, "arv_buffer_get_timestamp");
         GET_SYMBOL(arv_device_get_feature, "arv_device_get_feature");
+
+        GET_SYMBOL(arv_buffer_has_gendc, "arv_buffer_has_gendc");
 
         GET_SYMBOL(arv_shutdown, "arv_shutdown");
 
@@ -452,6 +459,19 @@ class U3V {
 
     GError* SetFeatureValue(ArvDevice *device, const char *feature, const char *value){
         arv_device_set_string_feature_value (device, feature, value, &err_);
+        return err_;
+    }
+
+    GError* SetFeatureValue(ArvDevice *device, const char *feature, double value){
+        double min_v, max_v;
+        arv_device_get_float_feature_bounds (device, feature, &min_v, &max_v, &err_);
+        if (err_ != nullptr) {
+            return err_;
+        }
+        value = (std::max)(min_v, value);
+        value = (std::min)(max_v, value);
+
+        arv_device_set_float_feature_value (device, feature, value, &err_);
         return err_;
     }
 
@@ -492,6 +512,7 @@ class U3V {
     arv_device_get_float_feature_value_t arv_device_get_float_feature_value;
 
     arv_device_get_integer_feature_bounds_t arv_device_get_integer_feature_bounds;
+    arv_device_get_float_feature_bounds_t arv_device_get_float_feature_bounds;
 
     arv_device_create_stream_t arv_device_create_stream;
 
@@ -506,6 +527,8 @@ class U3V {
     arv_buffer_get_data_t arv_buffer_get_data;
     arv_buffer_get_timestamp_t arv_buffer_get_timestamp;
     arv_device_get_feature_t arv_device_get_feature;
+
+    arv_buffer_has_gendc_t arv_buffer_has_gendc;
 
     arv_shutdown_t arv_shutdown;
 
@@ -564,7 +587,7 @@ int u3v_camera_frame_count(
 
 extern "C"
 int ION_EXPORT ion_bb_image_io_u3v_camera1(
-    bool frame_sync, bool realtime_diaplay_mode, int32_t gain0, int32_t exposure0,
+    bool frame_sync, bool realtime_diaplay_mode, double gain0, double exposure0,
     halide_buffer_t* pixel_format_buf, halide_buffer_t * gain_key_buf, halide_buffer_t * exposure_key_buf,
     halide_buffer_t * out0)
 {
@@ -599,7 +622,7 @@ ION_REGISTER_EXTERN(ion_bb_image_io_u3v_camera1);
 
 extern "C"
 int ION_EXPORT ion_bb_image_io_u3v_camera2(
-    bool frame_sync, bool realtime_diaplay_mode, int32_t gain0, int32_t gain1, int32_t exposure0, int32_t exposure1,
+    bool frame_sync, bool realtime_diaplay_mode, double gain0, double gain1, double exposure0, double exposure1,
     halide_buffer_t* pixel_format_buf, halide_buffer_t * gain_key_buf, halide_buffer_t * exposure_key_buf,
     halide_buffer_t * out0, halide_buffer_t * out1)
 {
