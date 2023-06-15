@@ -156,10 +156,10 @@ class U3V {
         }
     }
 
-    static U3V & get_instance(std::string pixel_format, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode)
+    static U3V & get_instance(std::string pixel_format, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode, bool gendc_bin, const std::string output_directory)
     {
         if (instance_ == nullptr){
-            instance_ = std::unique_ptr<U3V>(new U3V(pixel_format, num_sensor, frame_sync, realtime_diaplay_mode));
+            instance_ = std::unique_ptr<U3V>(new U3V(pixel_format, num_sensor, frame_sync, realtime_diaplay_mode, gendc_bin, output_directory));
         }
         return *instance_;
     }
@@ -177,7 +177,7 @@ class U3V {
             g_object_unref(reinterpret_cast<gpointer>(d.device_));
         }
 
-        if (is_gendc_){
+        if (is_gendc_ && write_gendc_bin_){
             ofs_.close();
         }
 
@@ -307,10 +307,10 @@ class U3V {
         for (int i = 0; i < num_sensor_; ++i){
             ::memcpy(outs[i], arv_buffer_get_part_data(bufs[i], 0, nullptr), devices_[i].image_payload_size_);
 
-            if (is_gendc_){
+            if (is_gendc_ && write_gendc_bin_){
                 bin_size_ += devices_[i].u3v_payload_size_;
 
-                if (bin_size_ > max_bin_size){
+                if (bin_size_ > max_bin_size_){
                     ofs_ = ::std::ofstream(output_directory_ / ("raw-" + std::to_string(++bin_idx_) + ".bin"), ::std::ios::binary);
                     bin_size_ = devices_[i].u3v_payload_size_;
                 }
@@ -323,11 +323,11 @@ class U3V {
     }
 
     private:
-    U3V(std::string pixel_format, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode, char* dev_id = nullptr)
+    U3V(std::string pixel_format, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode, bool gendc_bin, const std::string output_directory, char* dev_id = nullptr)
     : gobject_(GOBJECT_FILE, true), aravis_(ARAVIS_FILE, true), 
         pixel_format_(pixel_format), num_sensor_(num_sensor), 
         frame_sync_(frame_sync), realtime_diaplay_mode_(realtime_diaplay_mode), is_gendc_(false),
-        devices_(num_sensor), buffers_(num_sensor), disposed_(false), bin_idx_(0)
+        devices_(num_sensor), buffers_(num_sensor), disposed_(false), bin_idx_(0), bin_size_(0), write_gendc_bin_(gendc_bin), output_directory_(output_directory)
     {
         printf("[LOG ion-kit] This is ion-kit with debug-log; updated 23/06/15\n");
         init_symbols();
@@ -430,10 +430,11 @@ class U3V {
                         devices_[i].framecount_offset_ = gendc_descriptor_.getOffsetFromTypeSpecific(std::get<0>(data_comp_and_part), std::get<1>(data_comp_and_part), 3, 0);
                     
                         // TODO: take the output path as the param of BB
-                        output_directory_ = ".";
-                        ofs_ = ::std::ofstream(output_directory_ / "raw-0.bin", ::std::ios::binary);
-                        max_bin_size = 10 * 1024 * 1024;
-                        bin_size_ = 0;
+                        if (write_gendc_bin_){
+                            ofs_ = ::std::ofstream(output_directory_ / "raw-0.bin", ::std::ios::binary);
+                            max_bin_size_ = 10 * 1024 * 1024;
+                        }
+
                     }
                     free(buffer);
                 }else{
@@ -680,9 +681,10 @@ class U3V {
     bool realtime_diaplay_mode_;
     bool is_gendc_;
 
+    bool write_gendc_bin_;
     ghc::filesystem::path output_directory_;
     ::std::ofstream ofs_;
-    int32_t bin_size_, max_bin_size;
+    int32_t bin_size_, max_bin_size_;
     int32_t bin_idx_;
 
     // genDC
@@ -701,12 +703,13 @@ class U3V {
 std::unique_ptr<U3V> U3V::instance_;
 
 int u3v_camera_frame_count(
-    bool dispose, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode, halide_buffer_t * pixel_format_buf,
+    bool dispose, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode, halide_buffer_t * pixel_format_buf, bool gendc_bin, halide_buffer_t * output_directory_buf,
     halide_buffer_t* out)
 {
     try {
         const ::std::string pixel_format(reinterpret_cast<const char*>(pixel_format_buf->host));
-        auto &u3v(ion::bb::image_io::U3V::get_instance(pixel_format, num_sensor, frame_sync, realtime_diaplay_mode));
+        const ::std::string output_directory(reinterpret_cast<const char*>(output_directory_buf->host));
+        auto &u3v(ion::bb::image_io::U3V::get_instance(pixel_format, num_sensor, frame_sync, realtime_diaplay_mode, gendc_bin, output_directory));
         if (out->is_bounds_query()) {
             out->dim[0].min = 0;
             out->dim[0].extent = 1;
@@ -734,7 +737,7 @@ int u3v_camera_frame_count(
 extern "C"
 int ION_EXPORT ion_bb_image_io_u3v_camera1(
     bool frame_sync, bool realtime_diaplay_mode, double gain0, double exposure0,
-    halide_buffer_t* pixel_format_buf, halide_buffer_t * gain_key_buf, halide_buffer_t * exposure_key_buf,
+    halide_buffer_t* pixel_format_buf, halide_buffer_t * gain_key_buf, halide_buffer_t * exposure_key_buf, bool gendc_bin, halide_buffer_t * output_directory_buf,
     halide_buffer_t * out0)
 {
     using namespace Halide;
@@ -742,7 +745,9 @@ int ION_EXPORT ion_bb_image_io_u3v_camera1(
         const ::std::string gain_key(reinterpret_cast<const char*>(gain_key_buf->host));
         const ::std::string exposure_key(reinterpret_cast<const char*>(exposure_key_buf->host));
         const ::std::string pixel_format(reinterpret_cast<const char*>(pixel_format_buf->host));
-        auto &u3v(ion::bb::image_io::U3V::get_instance(pixel_format, 1, frame_sync, realtime_diaplay_mode));
+        const ::std::string output_directory(reinterpret_cast<const char*>(output_directory_buf->host));
+
+        auto &u3v(ion::bb::image_io::U3V::get_instance(pixel_format, 1, frame_sync, realtime_diaplay_mode, gendc_bin, output_directory));
         if (out0->is_bounds_query()) {
             //bounds query
             return 0;
@@ -769,7 +774,8 @@ ION_REGISTER_EXTERN(ion_bb_image_io_u3v_camera1);
 extern "C"
 int ION_EXPORT ion_bb_image_io_u3v_camera2(
     bool frame_sync, bool realtime_diaplay_mode, double gain0, double gain1, double exposure0, double exposure1,
-    halide_buffer_t* pixel_format_buf, halide_buffer_t * gain_key_buf, halide_buffer_t * exposure_key_buf,
+    halide_buffer_t* pixel_format_buf, halide_buffer_t * gain_key_buf, halide_buffer_t * exposure_key_buf, 
+    bool gendc_bin, halide_buffer_t * output_directory_buf,
     halide_buffer_t * out0, halide_buffer_t * out1)
 {
     using namespace Halide;
@@ -777,7 +783,9 @@ int ION_EXPORT ion_bb_image_io_u3v_camera2(
         const ::std::string gain_key(reinterpret_cast<const char*>(gain_key_buf->host));
         const ::std::string exposure_key(reinterpret_cast<const char*>(exposure_key_buf->host));
         const ::std::string pixel_format(reinterpret_cast<const char*>(pixel_format_buf->host));
-        auto &u3v(ion::bb::image_io::U3V::get_instance(pixel_format, 2, frame_sync, realtime_diaplay_mode));
+        const ::std::string output_directory(reinterpret_cast<const char*>(output_directory_buf->host));
+
+        auto &u3v(ion::bb::image_io::U3V::get_instance(pixel_format, 2, frame_sync, realtime_diaplay_mode, gendc_bin, output_directory));
         if (out0->is_bounds_query() || out1->is_bounds_query()) {
             //bounds query
             return 0;
@@ -806,10 +814,10 @@ ION_REGISTER_EXTERN(ion_bb_image_io_u3v_camera2);
 extern "C"
 int ION_EXPORT ion_bb_image_io_u3v_camera1_frame_count(
     halide_buffer_t *,
-    bool dispose, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode, halide_buffer_t * pixel_format_buf,
+    bool dispose, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode, halide_buffer_t * pixel_format_buf, bool gendc_bin, halide_buffer_t * output_directory_buf,
     halide_buffer_t* out)
 {
-    return ion::bb::image_io::u3v_camera_frame_count(dispose, num_sensor, frame_sync, realtime_diaplay_mode, pixel_format_buf, out);
+    return ion::bb::image_io::u3v_camera_frame_count(dispose, num_sensor, frame_sync, realtime_diaplay_mode, pixel_format_buf, gendc_bin, output_directory_buf, out);
 }
 ION_REGISTER_EXTERN(ion_bb_image_io_u3v_camera1_frame_count);
 
@@ -817,10 +825,10 @@ extern "C"
 int ION_EXPORT ion_bb_image_io_u3v_camera2_frame_count(
     halide_buffer_t *,
     halide_buffer_t *,
-    bool dispose, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode, halide_buffer_t * pixel_format_buf,
+    bool dispose, int32_t num_sensor, bool frame_sync, bool realtime_diaplay_mode, halide_buffer_t * pixel_format_buf, bool gendc_bin, halide_buffer_t * output_directory_buf,
     halide_buffer_t* out)
 {
-    return ion::bb::image_io::u3v_camera_frame_count(dispose, num_sensor, frame_sync, realtime_diaplay_mode, pixel_format_buf, out);
+    return ion::bb::image_io::u3v_camera_frame_count(dispose, num_sensor, frame_sync, realtime_diaplay_mode, pixel_format_buf, gendc_bin, output_directory_buf, out);
 }
 ION_REGISTER_EXTERN(ion_bb_image_io_u3v_camera2_frame_count);
 

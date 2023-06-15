@@ -553,6 +553,9 @@ template<typename T, typename T1, int D>
 class U3VCamera1 : public ion::BuildingBlock<U3VCamera1<T, T1, D>> {
 public:
 
+    GeneratorParam<std::string> output_directory_ptr{ "output_directory", "." };
+    GeneratorParam<bool> gendc_bin{"gendc_bin", false};
+
     GeneratorParam<bool> frame_sync{"frame_sync", false};
     GeneratorParam<std::string> pixel_format_ptr{"pixel_format_ptr", "RGB8"};
     GeneratorParam<std::string> gain_key_ptr{"gain_key", "Gain"};
@@ -584,10 +587,16 @@ public:
         exposure_key_buf.fill(0);
         std::memcpy(exposure_key_buf.data(), exposure_key.c_str(), exposure_key.size());
 
+        const std::string output_directory(output_directory_ptr);
+        Halide::Buffer<uint8_t> output_directory_buf(static_cast<int>(output_directory.size() + 1));
+        output_directory_buf.fill(0);
+        std::memcpy(output_directory_buf.data(), output_directory.c_str(), output_directory.size());
+
         std::vector<ExternFuncArgument> params{
             static_cast<bool>(frame_sync), static_cast<bool>(realtime_diaplay_mode),
             gain0, exposure0, pixel_format_buf,
-            gain_key_buf, exposure_key_buf
+            gain_key_buf, exposure_key_buf, 
+            static_cast<bool>(gendc_bin), output_directory_buf
          };
 
         Func camera1("u3v_camera1");
@@ -599,8 +608,15 @@ public:
         pixel_format_buf_cpy.fill(0);
         std::memcpy(pixel_format_buf_cpy.data(), pixel_format.c_str(), pixel_format.size());
 
+        Buffer<uint8_t> output_directory_buf_cpy(static_cast<int>(output_directory.size() + 1));
+        output_directory_buf_cpy.fill(0);
+        std::memcpy(output_directory_buf_cpy.data(), output_directory.c_str(), output_directory.size());
+
         Func camera1_frame_count;
-        camera1_frame_count.define_extern("ion_bb_image_io_u3v_camera1_frame_count", { camera1, dispose, 1, static_cast<bool>(frame_sync), static_cast<bool>(realtime_diaplay_mode), pixel_format_buf_cpy}, type_of<uint32_t>(), 1);
+        camera1_frame_count.define_extern("ion_bb_image_io_u3v_camera1_frame_count", 
+            { camera1, dispose, 1, static_cast<bool>(frame_sync), static_cast<bool>(realtime_diaplay_mode), 
+                pixel_format_buf_cpy, static_cast<bool>(gendc_bin), output_directory_buf
+            }, type_of<uint32_t>(), 1);
         camera1_frame_count.compute_root();
         frame_count(_) = camera1_frame_count(_);
     }
@@ -617,6 +633,8 @@ using U3VCamera1_float_U16x2 = U3VCamera1<uint16_t, double, 2>;
 template<typename T, typename T1, int D>
 class U3VCamera2 : public ion::BuildingBlock<U3VCamera2<T, T1, D>> {
 public:
+    GeneratorParam<std::string> output_directory_ptr{ "output_directory", "." };
+    GeneratorParam<bool> gendc_bin{"gendc_bin", false};
 
     GeneratorParam<bool> frame_sync{"frame_sync", false};
     GeneratorParam<std::string> pixel_format_ptr{"pixel_format_ptr", "RGB8"};
@@ -652,10 +670,16 @@ public:
         exposure_key_buf.fill(0);
         std::memcpy(exposure_key_buf.data(), exposure_key.c_str(), exposure_key.size());
 
+        const std::string output_directory(output_directory_ptr);
+        Halide::Buffer<uint8_t> output_directory_buf(static_cast<int>(output_directory.size() + 1));
+        output_directory_buf.fill(0);
+        std::memcpy(output_directory_buf.data(), output_directory.c_str(), output_directory.size());
+
         std::vector<ExternFuncArgument> params{
             static_cast<bool>(frame_sync), static_cast<bool>(realtime_diaplay_mode),
             gain0, gain1, exposure0, exposure1, pixel_format_buf,
-            gain_key_buf, exposure_key_buf
+            gain_key_buf, exposure_key_buf, 
+            static_cast<bool>(gendc_bin), output_directory_buf
          };
 
         Func camera2("u3v_camera2");
@@ -668,8 +692,15 @@ public:
         pixel_format_buf_cpy.fill(0);
         std::memcpy(pixel_format_buf_cpy.data(), pixel_format.c_str(), pixel_format.size());
 
+        Buffer<uint8_t> output_directory_buf_cpy(static_cast<int>(output_directory.size() + 1));
+        output_directory_buf_cpy.fill(0);
+        std::memcpy(output_directory_buf_cpy.data(), output_directory.c_str(), output_directory.size());
+
         Func camera2_frame_count;
-        camera2_frame_count.define_extern("ion_bb_image_io_u3v_camera2_frame_count", { camera2, dispose, 2, static_cast<bool>(frame_sync), static_cast<bool>(realtime_diaplay_mode), pixel_format_buf_cpy}, type_of<uint32_t>(), 1);
+        camera2_frame_count.define_extern("ion_bb_image_io_u3v_camera2_frame_count", 
+            { camera2, dispose, 2, static_cast<bool>(frame_sync), static_cast<bool>(realtime_diaplay_mode), 
+                pixel_format_buf_cpy, static_cast<bool>(gendc_bin), output_directory_buf_cpy
+            }, type_of<uint32_t>(), 1);
         camera2_frame_count.compute_root();
         frame_count(_) = camera2_frame_count(_);
     }
