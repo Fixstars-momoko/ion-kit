@@ -130,7 +130,8 @@ class U3V {
         const char* dev_id_;
         ArvDevice* device_;
 
-        int32_t payload_size_;
+        int32_t u3v_payload_size_;
+        int32_t image_payload_size_;
         uint64_t frame_count_;
 
         float gain_;
@@ -174,6 +175,10 @@ class U3V {
             */
             g_object_unref(reinterpret_cast<gpointer>(d.stream_));
             g_object_unref(reinterpret_cast<gpointer>(d.device_));
+        }
+
+        if (is_gendc_){
+            ofs_.close();
         }
 
         devices_.clear();
@@ -300,7 +305,19 @@ class U3V {
         }
 
         for (int i = 0; i < num_sensor_; ++i){
-            ::memcpy(outs[i], arv_buffer_get_part_data(bufs[i], 0, nullptr), devices_[i].payload_size_);
+            ::memcpy(outs[i], arv_buffer_get_part_data(bufs[i], 0, nullptr), devices_[i].image_payload_size_);
+
+            if (is_gendc_){
+                bin_size_ += devices_[i].u3v_payload_size_;
+
+                if (bin_size_ > max_bin_size){
+                    ofs_ = ::std::ofstream(output_directory_ / ("raw-" + std::to_string(++bin_idx_) + ".bin"), ::std::ios::binary);
+                    bin_size_ = devices_[i].u3v_payload_size_;
+                }
+
+                ofs_.write((char *) arv_buffer_get_data(bufs[i], nullptr), devices_[i].u3v_payload_size_);
+            }
+
             arv_stream_push_buffer(devices_[i].stream_, bufs[i]);
         }
     }
@@ -310,7 +327,7 @@ class U3V {
     : gobject_(GOBJECT_FILE, true), aravis_(ARAVIS_FILE, true), 
         pixel_format_(pixel_format), num_sensor_(num_sensor), 
         frame_sync_(frame_sync), realtime_diaplay_mode_(realtime_diaplay_mode), is_gendc_(false),
-        devices_(num_sensor), buffers_(num_sensor), disposed_(false)
+        devices_(num_sensor), buffers_(num_sensor), disposed_(false), bin_idx_(0)
     {
         printf("[LOG ion-kit] This is ion-kit with debug-log; updated 23/06/15\n");
         init_symbols();
@@ -355,15 +372,6 @@ class U3V {
                     throw std::runtime_error(err_->message);
                 }
 
-            // printf("[LOG ion-kit] U3V():: %d FramePreset=%s, framerate=%lf, Gain=%lf, and ExposureTime=%lf\n", 
-            //     i,
-            //     arv_device_get_string_feature_value(devices_[i].device_, "FramePreset", &err_),
-            //     arv_device_get_float_feature_value(devices_[i].device_, "AcquisitionFrameRate", &err_),
-            //     arv_device_get_float_feature_value(devices_[i].device_, "Gain", &err_),
-            //     arv_device_get_float_feature_value(devices_[i].device_, "ExposureTime", &err_));
-                
-
-                // printf("[LOG ion-kit] for camera %d arv_device_create_stream is going to be called\n", i);
                 devices_[i].stream_ = arv_device_create_stream(devices_[i].device_, nullptr, nullptr, &err_);
                 if (err_ ) {
                     throw std::runtime_error(err_->message);
@@ -371,21 +379,11 @@ class U3V {
                 if (devices_[i].stream_ == nullptr) {
                     throw std::runtime_error("stream is null");
                 }
-                // printf("[LOG ion-kit] for camera %d arv_device_create_stream was called\n", i);
-                // // Note:
-                // // PayloadSize in the definition of GenICam is U3V/GigE payload
-                // // which may include Chunk or GenDCDescriptor (Metadata)
-                // std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
-                // devices_[i].payload_size_
-                //     = arv_device_get_integer_feature_value(devices_[i].device_, "Width", &err_)
-                //     * arv_device_get_integer_feature_value(devices_[i].device_, "Height", &err_)
-                //     * getDepth(pixel_format_.c_str());
-                // std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
-                // printf("1: %lld ns\n", std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count());
-                // if (err_) {
-                //     throw std::runtime_error(err_->message);
-                // }
-                
+                devices_[i].u3v_payload_size_ = arv_device_get_integer_feature_value(devices_[i].device_, "PayloadSize", &err_);
+                if (err_) {
+                    throw std::runtime_error(err_->message);
+                }
+
                 // check it the device is gendc mode
                 is_gendc_ = arv_device_is_feature_available(devices_[i].device_, "GenDCDescriptor", &err_);
                 if (err_) {
@@ -428,13 +426,19 @@ class U3V {
                             devices_[i].is_data_image_ = true;
                         }
                         devices_[i].data_offset_ = gendc_descriptor_.getDataOffset(std::get<0>(data_comp_and_part), std::get<1>(data_comp_and_part));
-                        devices_[i].payload_size_ = gendc_descriptor_.getDataSize(std::get<0>(data_comp_and_part), std::get<1>(data_comp_and_part));
+                        devices_[i].image_payload_size_ = gendc_descriptor_.getDataSize(std::get<0>(data_comp_and_part), std::get<1>(data_comp_and_part));
                         devices_[i].framecount_offset_ = gendc_descriptor_.getOffsetFromTypeSpecific(std::get<0>(data_comp_and_part), std::get<1>(data_comp_and_part), 3, 0);
+                    
+                        // TODO: take the output path as the param of BB
+                        output_directory_ = ".";
+                        ofs_ = ::std::ofstream(output_directory_ / "raw-0.bin", ::std::ios::binary);
+                        max_bin_size = 10 * 1024 * 1024;
+                        bin_size_ = 0;
                     }
                     free(buffer);
                 }else{
                     devices_[i].data_offset_ = 0;
-                    devices_[i].payload_size_ = arv_device_get_integer_feature_value(devices_[i].device_, "PayloadSize", &err_);
+                    devices_[i].image_payload_size_ = devices_[i].u3v_payload_size_;
                     if (err_) {
                         throw std::runtime_error(err_->message);
                     }
@@ -448,9 +452,9 @@ class U3V {
 
         for (auto i=0; i<devices_.size(); ++i) {
             const size_t buffer_size = 1 * 1024 * 1024 * 1024; // 1GiB for each
-            auto n = (buffer_size + devices_[i].payload_size_ - 1) / devices_[i].payload_size_;
+            auto n = (buffer_size + devices_[i].u3v_payload_size_ - 1) / devices_[i].u3v_payload_size_;
             for (auto j=0; j<n; ++j) {
-                auto b = arv_buffer_new_allocate(devices_[i].payload_size_);
+                auto b = arv_buffer_new_allocate(devices_[i].u3v_payload_size_);
                 buffers_[i].push_back(b);
                 arv_stream_push_buffer(devices_[i].stream_, b);
             }
@@ -675,6 +679,11 @@ class U3V {
     bool frame_sync_;
     bool realtime_diaplay_mode_;
     bool is_gendc_;
+
+    ghc::filesystem::path output_directory_;
+    ::std::ofstream ofs_;
+    int32_t bin_size_, max_bin_size;
+    int32_t bin_idx_;
 
     // genDC
     ContainerHeader gendc_descriptor_;
