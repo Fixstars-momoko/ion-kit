@@ -1,9 +1,9 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - v*
+  pull_request:
+    branches:
+      - internal-develop
 
 jobs:
   release-linux:
