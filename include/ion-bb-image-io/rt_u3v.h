@@ -667,6 +667,13 @@ class U3V {
             }
         }
 
+        for (auto i=0; i<devices_.size(); ++i) {
+            devices_[i].gain_ = -1.0;
+            devices_[i].exposure_ = -1.0;
+            devices_[i].int_gain_ = -1;
+            devices_[i].int_exposure_ = -1;
+        }
+
         for (auto d : devices_) {
             arv_device_set_string_feature_value(d.device_, "AcquisitionMode", arv_acquisition_mode_to_string(ARV_ACQUISITION_MODE_CONTINUOUS), &err_);
             if (err_) {
