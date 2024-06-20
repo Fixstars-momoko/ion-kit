@@ -1,9 +1,9 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - v*
+  pull_request:
+    branches:
+      - internal-develop
 
 jobs:
   release-linux:
@@ -46,8 +46,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ion-kit*.deb
-            ion-kit*.tar.gz
+            ion-kit.deb
+            ion-kit.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -90,6 +90,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
             files: |
-                ion-kit*.zip
+                ion-kit.zip
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
